@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>FL INIT</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+
+
+  <!-- Libreria Sweetalert2 -->
+  <link rel="stylesheet" href="../node_modules/@sweetalert2/theme-dark/dark.css">
+  <!-- <script src="sweetalert2/dist/sweetalert2.min.js"></script> -->
+
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>FL INIT</h1>
+      <p>Bienvenido al inicializador de FL Studio!</p>
+    </header>
+    
+    <form id="form">
+      <div class="input-group">
+        <label for="youtube-url">URL de YouTube:</label>
+        <input type="text" id="youtube-url" placeholder="Ingresa la URL del video">
+      </div>
+      
+      <div class="input-group">
+        <label for="project-location">Ubicación del Proyecto:</label>
+        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto">
+        <button type="button" id="browse-location">Examinar</button>
+      </div>
+      
+      <div class="input-group">
+        <label for="project-name">Nombre del Proyecto:</label>
+        <input type="text" id="project-name" placeholder="Nombre del proyecto">
+      </div>
+      
+      <div class="input-group">
+        <label for="template-flp">Plantilla FLP:</label>
+        <select id="template-flp">
+          <!-- Opciones de plantillas se llenarán con JS -->
+        </select>
+      </div>
+      
+      <div class="input-group checkbox-group">
+        <input type="checkbox" id="separate-stems" name="separate-stems">
+        <label for="separate-stems">Separar stems</label>
+      </div>
+      
+      <div class="input-group">
+        <input type="submit" id="submit-form" value="DESCARGAR" disabled />
+      </div>
+    </form>
+    
+    <footer>
+      <p>La consola mostrará las barras de carga y el progreso de los procesos.</p>
+    </footer>
+  </div>
+
+  <script src="../renderer/render.js"></script>
+</body>
+</html>
