@@ -1,0 +1,71 @@
+body, input, button, select {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  background-color: #333;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #555; /* Agrega un borde para un look más definido */
+}
+
+header, footer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+input[type="text"], select {
+  flex-grow: 1;
+  padding: 10px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #555;
+}
+
+button, input[type=submit] {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007BFF;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover, input[type=submit] {
+  background-color: #0056b3;
+}
+
+input[type=submit]:disabled
+{
+  /* background-color: rgb(0,0,0, .5); */
+  filter: saturate(15%);
+}
+
+footer {
+  margin-top: 20px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group label {
+  margin-left: 8px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
