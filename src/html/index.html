@@ -5,11 +5,10 @@
   <title>FL INIT</title>
   <link rel="stylesheet" href="../css/styles.css">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta charset="UTF-8">
 
-
-  <!-- Libreria Sweetalert2 -->
-  <link rel="stylesheet" href="../node_modules/@sweetalert2/theme-dark/dark.css">
-  <!-- <script src="sweetalert2/dist/sweetalert2.min.js"></script> -->
+  <!-- Estilos oscuros Sweetalert2 -->
+  <!-- <link rel="stylesheet" href="@sweetalert2/theme-dark/dark.css"> -->
 
 </head>
 <body>
@@ -22,18 +21,18 @@
     <form id="form">
       <div class="input-group">
         <label for="youtube-url">URL de YouTube:</label>
-        <input type="text" id="youtube-url" placeholder="Ingresa la URL del video">
+        <input type="text" id="youtube-url" placeholder="Ingresa la URL del video" value="https://www.youtube.com/watch?v=E03oGHlkzBE">
       </div>
       
       <div class="input-group">
         <label for="project-location">Ubicación del Proyecto:</label>
-        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto">
+        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto" value="C:\Users\Izeta\Desktop\TEST">
         <button type="button" id="browse-location">Examinar</button>
       </div>
       
       <div class="input-group">
         <label for="project-name">Nombre del Proyecto:</label>
-        <input type="text" id="project-name" placeholder="Nombre del proyecto">
+        <input type="text" id="project-name" placeholder="Nombre del proyecto" value="EEc">
       </div>
       
       <div class="input-group">
@@ -48,8 +47,14 @@
         <label for="separate-stems">Separar stems</label>
       </div>
       
+      <div class="python-output">
+        <p>Salida Python</p>
+        <hr />
+        <div id="python-output"></div>
+      </div>
+
       <div class="input-group">
-        <input type="submit" id="submit-form" value="DESCARGAR" disabled />
+        <input type="submit" id="submit-form" value="DESCARGAR" /> <!--disabled--> 
       </div>
     </form>
     
@@ -58,6 +63,6 @@
     </footer>
   </div>
 
-  <script src="../renderer/render.js"></script>
+  <script src="../js/render.js"></script>
 </body>
 </html>
