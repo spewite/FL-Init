@@ -69,3 +69,27 @@ form {
   display: flex;
   flex-direction: column;
 }
+
+.python-output
+{
+  border: 2px solid #6e6e6e;
+  border-radius: 5px;
+  padding: 5px 20px;
+  margin-bottom: 20px;
+}
+
+.python-output > div 
+{
+  overflow-y: scroll;
+  max-height: 200px;
+}
+
+.python-output > p
+{
+  font-weight: bold;
+}
+
+.python-output p
+{
+  font-size: 11px;
+}
