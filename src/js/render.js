@@ -4,15 +4,31 @@ const Swal = require('sweetalert2');
 
 const pythonOutput = document.getElementById("python-output");
 
+
+
+/// ------------------------------------  ///
+///            EVENT LISTENERS            /// 
+/// ------------------------------------  ///
+
+
+// ----- DOMContentLoaded ---- //
 document.addEventListener("DOMContentLoaded", (e) => {
   const uuid = crypto.randomUUID();
   document.getElementById("project-name").value = uuid;
 });
 
+// ----- CERRAR MODAL ---- //
+const btnCerrarModal = document.getElementById("cerrar-modal");
+btnCerrarModal.addEventListener("click", (e) => {
+  window.dialog.close();
+});
 
-/// ------------------------------------  ///
-///              FORM SUBMIT              /// 
-/// ------------------------------------  ///
+// ----- WINDOW ONCLICK ---- //
+window.addEventListener("click", (e) => {
+  console.log(e.target)
+});
+
+// ----- FORM SUBMIT ---- //
 
 document.getElementById('form').addEventListener('submit', function(event) {
   event.preventDefault();
@@ -25,7 +41,6 @@ document.getElementById('form').addEventListener('submit', function(event) {
   // Parametros opcionales
   const separateStems = document.getElementById('separate-stems').checked;
   const templatePath = document.getElementById('template-flp').value;
-
 
   // Argumentos para el script de Python
   const args = [projectLocation, youtubeUrl, projectName];
@@ -57,6 +72,10 @@ document.getElementById('form').addEventListener('submit', function(event) {
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
 
+ipcRenderer.on('error-generico', (event, err) => {
+  alert(`Error: ${err}`);
+});
+
 function insertarPythonOutput(mensaje, color)
 {
   const p = document.createElement("p");
@@ -81,7 +100,6 @@ document.getElementById('browse-flp-template').addEventListener('click', (e) => 
 ///      BACKEND FILE/DIALOG RETORNO      /// 
 /// ------------------------------------  ///
 ipcRenderer.on('selected-directory', (event, path) => {
-
   document.getElementById("project-location").value = path;
 });
 
@@ -109,14 +127,20 @@ ipcRenderer.on('selected-file', (event, filePath) => {
 ///         BACKEND CAMBIO CONFIG         /// 
 /// ------------------------------------  ///
 
-ipcRenderer.on('mensaje-del-backend', (event, message) => {
-  console.log(message); // Aquí puedes ver el mensaje en la consola del navegador
-  ejecutarFuncionFrontend(message); // Llama a la función con el mensaje recibido
-});
+ipcRenderer.on('cambiar-config-peticion', (event, parametro) => {
+  
+  // Parametro: (1) ruta_proyecto (2) ruta_plantillas
 
-function ejecutarFuncionFrontend(data) {
-  alert(data); // Aquí puedes poner la lógica que desees ejecutar en el frontend
-}
+  window.dialog.showModal();
+
+  const valor = 'C:\\Users\\Izeta\\Desktop\\TEST\\35e450f4-1265-4b30-843f-4e5101af9db9\\assets';
+
+  const JSON_Config = {
+    [parametro]: valor,
+  }
+
+  ipcRenderer.send('cambiar-config-valores', JSON_Config);
+});
 
 /// ------------------------------------  ///
 ///         BACKEND PYTHON RETORNO        /// 

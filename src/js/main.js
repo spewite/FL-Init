@@ -6,9 +6,11 @@ const quote = require('shell-quote').quote;
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
+const CONFIG_PATH = path.join(__dirname, '../../config.json');
+let win;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1000,
     height: 764,
     webPreferences: {
@@ -26,8 +28,8 @@ function createWindow() {
     {
       label: 'Configuración',
       submenu: [
-        { label: 'Cambiar ubicación de salida por defecto', click() { cambiar_config('output_dir'); } },
-        { label: 'Cambiar ubicación de las plantillas FLP', click() { cambiar_config('template_dir'); } }
+        { label: 'Cambiar ubicación de salida por defecto', click() { cambiar_config('ruta_proyecto'); } },
+        { label: 'Cambiar ubicación de las plantillas FLP', click() { cambiar_config('ruta_plantillas'); } }
       ]
     },
     {
@@ -72,13 +74,68 @@ app.on('window-all-closed', () => {
 
 
 /// ------------------------------------  ///
-///             CONFIGURACION             /// 
+///          CAMBIAR CONFIGURACION        /// 
 /// ------------------------------------  ///
 
 function cambiar_config(config)
 {
-  mainWindow.webContents.send('cambiar-config', config);
+  win.webContents.send('cambiar-config-peticion', config);
 }
+
+ipcMain.on('cambiar-config-valores', (event, JSON_ConfigInput) => {
+
+  // Valores Posibles: {ruta_proyecto: (valor)} o {ruta_plantillas: (valor)}
+  // CONFIG_PATH está declarado arriba de todo.
+  
+  
+  fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
+
+    if (err) {
+      lanzar_error('Error al leer el archivo de configuracion:' + err);
+      return;
+    }
+
+    let JSON_ConfigActual, JSON_ConfigNuevo;
+    
+    // Leer el JSON actual para poder sobreescribir unicamente el valor que queremos
+    try {
+      JSON_ConfigActual = JSON.parse(data);
+    } catch (parseErr) {
+      lanzar_error('Error al parsear el archivo de configuracion: ' + parseErr);
+      return;
+    }
+
+    if (!JSON_ConfigActual) {
+      lanzar_error('Error al leer el archivo de configuracion.');
+      return;
+    }
+
+    // Obtener el qué parametro hemos cambiado: ruta_proyecto o ruta_plantillas
+    // Reemplazar en el json original el valor del nuevo key
+    try {
+      let parametro = Object.keys(JSON_ConfigInput)[0];
+      JSON_ConfigActual[parametro] = JSON_ConfigInput[parametro];
+
+      JSON_ConfigNuevo = JSON_ConfigActual;
+    }  catch (parseErr) {
+      lanzar_error('Error al parsear el JSON o al intentar meter el nuevo valor: ' + parseErr);
+      return;
+    }
+
+    // Guardar la configuracion en el archivo de configuracion.
+    try {
+      const jsonConfig = JSON.stringify(JSON_ConfigNuevo, null, 2);
+      fs.writeFileSync(CONFIG_PATH, jsonConfig);
+      console.log('Configuración guardada:', jsonConfig);
+    }  catch (fileSaveError) {
+      lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
+      return;
+    }
+
+  });
+  
+});
+
 
 /// ------------------------------------  ///
 ///       OPEN FILE/DIRECTORY DIALOG      ///
@@ -159,3 +216,15 @@ ipcMain.on('run-python-script', (event, args) => {
     }
   });
 });
+
+
+/// ------------------------------------  ///
+///               UTILIDADES              ///
+/// ------------------------------------  ///
+
+function lanzar_error(err)
+{
+  win.webContents.send('error-generico', err);
+  console.log("\x1b[43m", err);  // Colores: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
+  console.log("\x1b[0m", '');    // Resetear
+}
