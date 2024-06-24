@@ -5,6 +5,11 @@ body, input, button, select {
   overflow: hidden;
 }
 
+/*  ------------------------------------  ///
+///               FORMULARIO              /// 
+/// ------------------------------------   */
+
+
 .container {
   max-width: 960px;
   margin: 20px auto;
@@ -92,4 +97,87 @@ form {
 .python-output p
 {
   font-size: 11px;
+}
+
+
+/*  ------------------------------------  ///
+///                  MODAL                /// 
+/// ------------------------------------   */
+
+/* FONDO POLITAK: https://gradients.shecodes.io/gradients/179 */
+
+dialog {
+	padding: 0px;
+    background: white;
+    max-width: 700px;
+    width: 700px;
+    border-radius: 10px;
+    border: 0;
+    box-shadow: 0 -2px 30px 0 rgb(50 166 227 / 19%), 2px 5px 6px 3px rgb(0 0 0 / 16%);
+    animation: zoomIn 0.5s ease both;
+}
+
+dialog::backdrop {
+	animation: fadeIn 0.8s ease both;
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 2;
+	backdrop-filter: blur(5px);
+	cursor: pointer;
+}
+
+dialog div 
+{
+	padding-top: 2rem;
+	padding: 20px;
+	/* background: linear-gradient(189deg, #3cb5ef, #314755); */
+}
+
+dialog input 
+{
+	width: 80%;
+}
+
+.x {
+	filter: grayscale(1);
+	border: none;
+	background: none;
+	position: absolute;
+	top: 15px;
+	right: 10px;
+	transition: ease filter, transform 0.3s;
+	cursor: pointer;
+	transform-origin: center;
+	
+}
+
+.x:hover {
+	filter: grayscale(0);
+	transform: scale(1.1);
+}
+
+dialog h2 {
+	font-weight: 600;
+	font-size: 2rem;
+	padding-bottom: 1rem;
+	margin: 0px;
+}
+
+@keyframes zoomIn {
+	from {
+		opacity: 0;
+		transform: scale(0%);
+	}
+	to {
+		opacity: 1;
+		transform: scale(100%);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }

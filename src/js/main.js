@@ -87,7 +87,6 @@ ipcMain.on('cambiar-config-valores', (event, JSON_ConfigInput) => {
   // Valores Posibles: {ruta_proyecto: (valor)} o {ruta_plantillas: (valor)}
   // CONFIG_PATH está declarado arriba de todo.
   
-  
   fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
 
     if (err) {
@@ -126,7 +125,6 @@ ipcMain.on('cambiar-config-valores', (event, JSON_ConfigInput) => {
     try {
       const jsonConfig = JSON.stringify(JSON_ConfigNuevo, null, 2);
       fs.writeFileSync(CONFIG_PATH, jsonConfig);
-      console.log('Configuración guardada:', jsonConfig);
     }  catch (fileSaveError) {
       lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
       return;
