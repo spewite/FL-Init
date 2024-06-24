@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const { copyFileSync } = require('original-fs');
 const Swal = require('sweetalert2');
 
 
@@ -20,13 +21,15 @@ document.addEventListener("DOMContentLoaded", (e) => {
 // ----- CERRAR MODAL ---- //
 const btnCerrarModal = document.getElementById("cerrar-modal");
 btnCerrarModal.addEventListener("click", (e) => {
-  window.dialog.close();
+  cerrar_dialog();
 });
 
 // ----- WINDOW ONCLICK ---- //
 window.addEventListener("click", (e) => {
-  console.log(e.target)
+  // Cerrar dialog si se hace click fuera
+  e.target.tagName == "DIALOG" && cerrar_dialog();
 });
+
 
 // ----- FORM SUBMIT ---- //
 
@@ -71,6 +74,12 @@ document.getElementById('form').addEventListener('submit', function(event) {
 /// ------------------------------------  ///
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
+
+function cerrar_dialog()
+{
+  window.dialog.close();
+  // VACIAR INPUT
+}
 
 ipcRenderer.on('error-generico', (event, err) => {
   alert(`Error: ${err}`);
