@@ -20,14 +20,14 @@ function createWindow() {
   win.loadFile(path.join(__dirname, '../html/index.html'));
 
   // Abrir DevTools automáticamente
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
 
   const menu = Menu.buildFromTemplate([
     {
       label: 'Configuración',
       submenu: [
-        { label: 'Cambiar ubicación de salida por defecto', click() { console.log('Cambiar ubicación de salida por defecto'); } },
-        { label: 'Cambiar ubicación de las plantillas FLP', click() { console.log('Cambiar ubicación de las plantillas FLP'); } }
+        { label: 'Cambiar ubicación de salida por defecto', click() { cambiar_config('output_dir'); } },
+        { label: 'Cambiar ubicación de las plantillas FLP', click() { cambiar_config('template_dir'); } }
       ]
     },
     {
@@ -70,18 +70,57 @@ app.on('window-all-closed', () => {
   }
 });
 
+
+/// ------------------------------------  ///
+///             CONFIGURACION             /// 
+/// ------------------------------------  ///
+
+function cambiar_config(config)
+{
+  mainWindow.webContents.send('cambiar-config', config);
+}
+
+/// ------------------------------------  ///
+///       OPEN FILE/DIRECTORY DIALOG      ///
+/// ------------------------------------  ///
+
+
 // Manejo de IPC para abrir el diálogo de selección de archivos
-ipcMain.on('open-file-dialog', (event) => {
+ipcMain.on('open-directory-dialog', (event) => {
+
   dialog.showOpenDialog({
     properties: ['openDirectory']
   }).then(result => {
+
     if (!result.canceled && result.filePaths.length > 0) {
       event.sender.send('selected-directory', result.filePaths[0]);
     }
   }).catch(err => {
     console.error('Error al abrir el diálogo de selección de directorio:', err);
   });
+
 });
+
+// Manejo de IPC para abrir el diálogo de selección de archivos
+ipcMain.on('open-file-dialog', (event) => {
+
+  dialog.showOpenDialog({
+    properties: ['openFile']
+  }).then(result => {
+    if (!result.canceled && result.filePaths.length > 0) {
+      console.log(result)
+      event.sender.send('selected-file', result.filePaths[0]);
+    }
+  }).catch(err => {
+    console.error('Error al abrir el diálogo de selección de directorio:', err);
+  });
+
+});
+
+
+/// ------------------------------------  ///
+///             SCRIPTS PYTHON            ///
+/// ------------------------------------  ///
 
 
 ipcMain.on('run-python-script', (event, args) => {
@@ -95,7 +134,7 @@ ipcMain.on('run-python-script', (event, args) => {
     
     if (message.toLowerCase().includes('error')) {
       event.sender.send('python-script-error', message);
-    } else if (message.toLowerCase().includes('chunk'))  {
+    } else if (message.toLowerCase().includes('%'))  {
       event.sender.send('python-script-info', message);
     } else 
     {
