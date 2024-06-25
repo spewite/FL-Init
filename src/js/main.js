@@ -127,8 +127,7 @@ ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
       fs.writeFileSync(CONFIG_PATH, jsonConfig);
 
       // Notificar al frontend que la configuración se guardó con éxito
-      event.sender.send('configuracion-guardada', { success: true });
-      console.log("LLEGA AQ")
+      event.sender.send('configuracion-guardada', { jsonConfig: jsonConfig });
 
     } catch (fileSaveError) {
       lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
@@ -138,12 +137,9 @@ ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
 });
 
 
-
-
 /// ------------------------------------  ///
 ///       OPEN FILE/DIRECTORY DIALOG      ///
 /// ------------------------------------  ///
-
 
 // Manejo de IPC para abrir el diálogo de selección de archivos
 ipcMain.on('open-directory-dialog', (event, input_id) => {
@@ -169,10 +165,11 @@ ipcMain.on('open-directory-dialog', (event, input_id) => {
 });
 
 // Manejo de IPC para abrir el diálogo de selección de archivos
-ipcMain.on('open-file-dialog', (event) => {
+ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
   dialog.showOpenDialog({
-    properties: ['openFile']
+    properties: ['openFile'],
+    filters: [{ name: 'Plantilla .flp', extensions: extensionsArray }]
   }).then(result => {
     if (!result.canceled && result.filePaths.length > 0) {
       console.log(result)
@@ -184,11 +181,9 @@ ipcMain.on('open-file-dialog', (event) => {
 
 });
 
-
 /// ------------------------------------  ///
 ///             SCRIPTS PYTHON            ///
 /// ------------------------------------  ///
-
 
 ipcMain.on('run-python-script', (event, args) => {
   let scriptPath = path.join(__dirname, '../scripts/script_python.py');

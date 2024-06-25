@@ -158,8 +158,8 @@ dialog input
 }
 
 .x:hover {
-	filter: grayscale(0);
-	transform: scale(1.1);
+  background-color: lightgray;
+  transform: scale(1.1);
 }
 
 dialog h2 {
@@ -188,11 +188,11 @@ dialog hr
 @keyframes zoomIn {
 	from {
 		opacity: 0;
-		transform: scale(0%);
+		transform: translateY(-20%);
 	}
 	to {
 		opacity: 1;
-		transform: scale(100%);
+		transform: translateY(0%);
 	}
 }
 

@@ -9,18 +9,28 @@ const Swal = require('sweetalert2');
 
 const pythonOutput = document.getElementById("python-output");
 
+// -----  INPUTS PRINCIPALES ---- //
+
+// Parametros obligatorios 
+const inputYoutubeUrl = document.getElementById('youtube-url');
+const inputProjectLocation = document.getElementById('project-location');
+const inputProjectName = document.getElementById('project-name');
+
+// Parametros opcionales
+const inputSeparateStems = document.getElementById('separate-stems'); 
+const inputTemplatePath = document.getElementById('template-flp');
+
 // -----  MODAL ---- //
 const dialog = document.getElementById("dialog");
 const btnModalGuardar = document.getElementById("modal-guardar");
 const btnCerrarModal = document.getElementById("cerrar-modal");
 const inputProyectoConfig = document.getElementById("dialog-input-proyecto"); 
 const inputPlantillasConfig = document.getElementById("dialog-input-plantillas"); 
-
+const browseInputArrayConfig = document.querySelectorAll("button[data-browse-config]");
 
 /// ------------------------------------  ///
 ///            EVENT LISTENERS            /// 
 /// ------------------------------------  ///
-
 
 // ----- DOMContentLoaded ---- //
 document.addEventListener("DOMContentLoaded", (e) => {
@@ -44,20 +54,20 @@ window.addEventListener("click", (e) => {
   e.target.tagName == "DIALOG" && cerrar_dialog();
 });
 
-
 // ----- FORM SUBMIT ---- //
 
 document.getElementById('form').addEventListener('submit', function(event) {
   event.preventDefault();
 
   // Parametros obligatorios 
-  const youtubeUrl = document.getElementById('youtube-url').value;
-  const projectLocation = document.getElementById('project-location').value;
-  const projectName = document.getElementById('project-name').value;
+  const youtubeUrl = inputYoutubeUrl.value;
+  const projectLocation = inputProjectLocation.value;
+  const projectName = inputProjectName.value;
 
   // Parametros opcionales
-  const separateStems = document.getElementById('separate-stems').checked;
-  const templatePath = document.getElementById('template-flp').value;
+  const separateStems = inputSeparateStems.checked; 
+  const templatePath = inputTemplatePath.value;
+
 
   // Argumentos para el script de Python
   const args = [projectLocation, youtubeUrl, projectName];
@@ -84,26 +94,6 @@ document.getElementById('form').addEventListener('submit', function(event) {
   // console.log(" ------------ ");
 });
 
-
-/// ------------------------------------  ///
-///               UTILIDADES              /// 
-/// ------------------------------------  ///
-
-ipcRenderer.on('error-generico', (event, err) => {
-  alert(`Error: ${err}`);
-});
-
-function insertarPythonOutput(mensaje, color)
-{
-  const p = document.createElement("p");
-  const nodo = document.createTextNode(mensaje);
-
-  p.appendChild(nodo);
-  p.setAttribute("style", `color:${color};`) 
-
-  pythonOutput.appendChild(p);
-}
-
 /// ------------------------------------  ///
 ///      LLAMADA BACKEND FILE DIALOG      /// 
 /// ------------------------------------  ///
@@ -113,15 +103,17 @@ document.getElementById('browse-location').addEventListener('click', (e) => {
 });
 
 document.getElementById('browse-flp-template').addEventListener('click', (e) => {
-  ipcRenderer.send('open-file-dialog');
+  ipcRenderer.send('open-file-dialog', ['flp']);
 });
 
-document.getElementById('browse-config').addEventListener('click', (e) => {
-  console.log(e.target.closest("div").getElementsByTagName("INPUT")[0])
-  const inputConfig = e.target.closest("div").getElementsByTagName("INPUT")[0];
-  ipcRenderer.send('open-directory-dialog', inputConfig);
+// Botones "Browse" del modal de configuración.
+browseInputArrayConfig.forEach(browseInput => {  
+  browseInput.addEventListener('click', (e) => {
+    console.log(e.target.closest("div").getElementsByTagName("INPUT")[0])
+    const inputConfigId = e.target.closest("div").getElementsByTagName("INPUT")[0].id;
+    ipcRenderer.send('open-directory-dialog', inputConfigId);
+  });
 });
-
 
 /// ------------------------------------  ///
 ///      BACKEND FILE DIALOG RETORNO      /// 
@@ -210,12 +202,17 @@ ipcRenderer.on('mostrar-modal', (event, valoresConfiguracion) => {
   window.dialog.showModal();
 });
 
-ipcRenderer.on('configuracion-guardada', (event, args) => {
-  const {success} = args;
-  if (success)
-  {
-    Swal.fire("La configuración se ha guardado con éxito!"); 
-  } 
+ipcRenderer.on('configuracion-guardada', (event, config) => {
+  
+  Swal.fire("La configuración se ha guardado con éxito!"); 
+  
+  let {jsonConfig} = config 
+  
+  jsonConfig = JSON.parse(jsonConfig);
+
+  // Poner la nueva configuración en los inputs.
+  inputProjectLocation.value = jsonConfig["ruta_proyecto"];
+  inputTemplatePath.value = jsonConfig["ruta_plantillas"];
 });
 
 /// ------------------------------------  ///
@@ -235,6 +232,21 @@ ipcRenderer.on('python-script-info', (event, mensaje) => {
   insertarPythonOutput(mensaje, "#14bef3");
 });
 
+/// ------------------------------------  ///
+///               UTILIDADES              /// 
+/// ------------------------------------  ///
 
+ipcRenderer.on('error-generico', (event, err) => {
+  alert(`Error: ${err}`);
+});
 
+function insertarPythonOutput(mensaje, color)
+{
+  const p = document.createElement("p");
+  const nodo = document.createTextNode(mensaje);
 
+  p.appendChild(nodo);
+  p.setAttribute("style", `color:${color};`) 
+
+  pythonOutput.appendChild(p);
+}
