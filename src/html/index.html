@@ -17,16 +17,31 @@
     <div>
       <button id="cerrar-modal" aria-label="close" class="x">❌</button>
 
-      <h2>Cambiar ubicación por defecto</h2>
+      <h2>Configuración</h2>
+       
+      <p>Cada vez que abras la aplicación se tendrán en cuenta los siguientes parametros para rellenar los campos.</p>
 
-      <input type="text" placeholder="Ruta de la ubicación de proyectos por defecto" />
-      <button type="button" id="browse-flp-template">Examinar</button>
-    
-      <p>Cada vez que abras la aplicación se autocompletará el campo relativo a la ruta del proyecto con el valor que introduzcas aqui.</p>
-
-      <button style="width: 100%;">GUARDAR</button>
-    </div>
+      <div>
+        <h3>Ruta de proyectos</h3>
+        <div class="dialog-input-div">
+            <input type="text" id="dialog-input-proyecto" placeholder="Ruta de la ubicación de proyectos por defecto">
+            <button type="button" id="browse-config">Examinar</button>
+        </div>
+      </div>
       
+      <hr />
+      
+      <div>
+        <h3>Ruta de plantillas .FLP</h3>
+        <div class="dialog-input-div">
+            <input type="text" id="dialog-input-plantillas" placeholder="Ruta de la ubicación de proyectos por defecto">
+            <button type="button" id="browse-config">Examinar</button>
+        </div>
+        
+      </div>
+      
+      <button style="width: 100%;" id="modal-guardar">GUARDAR</button>
+    </div>
   </dialog>
 
   <div class="container">
