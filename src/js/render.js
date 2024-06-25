@@ -3,8 +3,18 @@ const { copyFileSync } = require('original-fs');
 const Swal = require('sweetalert2');
 
 
+/// ------------------------------------  ///
+///               NODOS HTML              /// 
+/// ------------------------------------  ///
+
 const pythonOutput = document.getElementById("python-output");
 
+// -----  MODAL ---- //
+const dialog = document.getElementById("dialog");
+const btnModalGuardar = document.getElementById("modal-guardar");
+const btnCerrarModal = document.getElementById("cerrar-modal");
+const inputProyectoConfig = document.getElementById("dialog-input-proyecto"); 
+const inputPlantillasConfig = document.getElementById("dialog-input-plantillas"); 
 
 
 /// ------------------------------------  ///
@@ -19,9 +29,13 @@ document.addEventListener("DOMContentLoaded", (e) => {
 });
 
 // ----- CERRAR MODAL ---- //
-const btnCerrarModal = document.getElementById("cerrar-modal");
 btnCerrarModal.addEventListener("click", (e) => {
   cerrar_dialog();
+});
+
+// ----- GUARDAR MODAL ---- //
+btnModalGuardar.addEventListener('click', () => {
+  guardar_configuracion();
 });
 
 // ----- WINDOW ONCLICK ---- //
@@ -75,12 +89,6 @@ document.getElementById('form').addEventListener('submit', function(event) {
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
 
-function cerrar_dialog()
-{
-  window.dialog.close();
-  // VACIAR INPUT
-}
-
 ipcRenderer.on('error-generico', (event, err) => {
   alert(`Error: ${err}`);
 });
@@ -96,20 +104,36 @@ function insertarPythonOutput(mensaje, color)
   pythonOutput.appendChild(p);
 }
 
+/// ------------------------------------  ///
+///      LLAMADA BACKEND FILE DIALOG      /// 
+/// ------------------------------------  ///
+
 document.getElementById('browse-location').addEventListener('click', (e) => {
-  ipcRenderer.send('open-directory-dialog');
+  ipcRenderer.send('open-directory-dialog', 'project-location');
 });
 
 document.getElementById('browse-flp-template').addEventListener('click', (e) => {
   ipcRenderer.send('open-file-dialog');
 });
 
+document.getElementById('browse-config').addEventListener('click', (e) => {
+  console.log(e.target.closest("div").getElementsByTagName("INPUT")[0])
+  const inputConfig = e.target.closest("div").getElementsByTagName("INPUT")[0];
+  ipcRenderer.send('open-directory-dialog', inputConfig);
+});
+
 
 /// ------------------------------------  ///
-///      BACKEND FILE/DIALOG RETORNO      /// 
+///      BACKEND FILE DIALOG RETORNO      /// 
 /// ------------------------------------  ///
-ipcRenderer.on('selected-directory', (event, path) => {
-  document.getElementById("project-location").value = path;
+
+ipcRenderer.on('selected-directory', (event, args) => {
+
+  const {path} = args;
+  const {input_id} = args;
+
+  document.getElementById(input_id).value = path; 
+  
 });
 
 ipcRenderer.on('selected-file', (event, filePath) => {
@@ -133,22 +157,65 @@ ipcRenderer.on('selected-file', (event, filePath) => {
 
 
 /// ------------------------------------  ///
-///         BACKEND CAMBIO CONFIG         /// 
+///           MODAL CONFIGURACIÓN         /// 
 /// ------------------------------------  ///
 
-ipcRenderer.on('cambiar-config-peticion', (event, parametro) => {
-  
-  // Parametro: (1) ruta_proyecto (2) ruta_plantillas
 
-  window.dialog.showModal();
+function cerrar_dialog()
+{
+  // Swal.fire({
+  //   title: '¿Quieres guardar el valor del parámetro?',
+  //   confirmButtonText: 'Sí',
+  //   cancelButtonText: 'No',
+  //   showCancelButton: true,
+  // }).then((result) => {
+  //   console.log(result)
+  //     if (result.isConfirmed) {
+  //       guardar_configuracion();
+  //     }
+  // });
 
-  const valor = 'C:\\Users\\Izeta\\Desktop\\TEST\\35e450f4-1265-4b30-843f-4e5101af9db9\\assets';
+  window.dialog.close();
+}
+
+function guardar_configuracion()
+{
+  const valorProyecto = inputProyectoConfig.value;
+  const valorPlantillas = inputPlantillasConfig.value;
 
   const JSON_Config = {
-    [parametro]: valor,
+    "ruta_proyecto": valorProyecto,
+    "ruta_plantillas": valorPlantillas
   }
 
   ipcRenderer.send('cambiar-config-valores', JSON_Config);
+
+  // Cerrar el modal
+  cerrar_dialog();
+}
+
+
+/// ------- BACKEND MODAL CONFIGURACIÓN ------  ///
+
+ipcRenderer.on('mostrar-modal', (event, valoresConfiguracion) => {  
+  
+  // Rellenar los inputs con los datos de configuración actual.
+  const {ruta_proyecto} = valoresConfiguracion;
+  const {ruta_plantillas} = valoresConfiguracion;
+
+  inputProyectoConfig.value = ruta_proyecto;
+  inputPlantillasConfig.value = ruta_plantillas;
+
+  // Mostrar el modal
+  window.dialog.showModal();
+});
+
+ipcRenderer.on('configuracion-guardada', (event, args) => {
+  const {success} = args;
+  if (success)
+  {
+    Swal.fire("La configuración se ha guardado con éxito!"); 
+  } 
 });
 
 /// ------------------------------------  ///

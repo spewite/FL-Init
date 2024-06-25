@@ -6,13 +6,23 @@ const quote = require('shell-quote').quote;
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
+
+/// ------------------------------------  ///
+///           VARIABLES GLOBALES         /// 
+/// ------------------------------------  ///
+
 const CONFIG_PATH = path.join(__dirname, '../../config.json');
 let win;
 
+
+/// ------------------------------------  ///
+///          CONFIGURACIÓN BACKEND        /// 
+/// ------------------------------------  ///
+
 function createWindow() {
   win = new BrowserWindow({
-    width: 1000,
-    height: 764,
+    width: 1100,
+    height: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -21,21 +31,17 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, '../html/index.html'));
 
+  // Maximizar la ventana después de crearla
+  win.maximize();
+
   // Abrir DevTools automáticamente
   // win.webContents.openDevTools();
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Configuración',
+      label: 'Ajustes',
       submenu: [
-        { label: 'Cambiar ubicación de salida por defecto', click() { cambiar_config('ruta_proyecto'); } },
-        { label: 'Cambiar ubicación de las plantillas FLP', click() { cambiar_config('ruta_plantillas'); } }
-      ]
-    },
-    {
-      label: 'Ver',
-      submenu: [
-        { label: 'Mostrar Configuración', click() { console.log('Mostrar Configuración'); } }
+        { label: 'Configuración', click() { cambiar_config(); } },
       ]
     },
     {
@@ -77,62 +83,61 @@ app.on('window-all-closed', () => {
 ///          CAMBIAR CONFIGURACION        /// 
 /// ------------------------------------  ///
 
-function cambiar_config(config)
+function cambiar_config()
 {
-  win.webContents.send('cambiar-config-peticion', config);
+  // Leer la configuración actual para mostrarlo al abrir la modal de configuración
+  fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
+    
+    let JSON_Config;
+    
+    try {
+      if (err) {
+        throw new Error('Error al leer el archivo de configuracion:' + err);
+      }
+
+      JSON_Config = JSON.parse(data);
+
+      if (!JSON_Config) {
+        throw new Error('La configuración es nula o indefinida');
+      }
+
+      // Si todo ha salido bien mostrar la modal con la configuración actual
+      win.webContents.send('mostrar-modal', JSON_Config);
+      
+    } catch (error) {
+      lanzar_error('Error al leer el archivo de configuracion:' + error);
+    }
+  });
 }
 
-ipcMain.on('cambiar-config-valores', (event, JSON_ConfigInput) => {
+ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
 
-  // Valores Posibles: {ruta_proyecto: (valor)} o {ruta_plantillas: (valor)}
-  // CONFIG_PATH está declarado arriba de todo.
+  // CONFIG_PATH está declarado arriba de todo. 
   
   fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
 
     if (err) {
-      lanzar_error('Error al leer el archivo de configuracion:' + err);
+      lanzar_error('Error al leer el archivo de configuracion: ' + err);
       return;
     }
-
-    let JSON_ConfigActual, JSON_ConfigNuevo;
-    
-    // Leer el JSON actual para poder sobreescribir unicamente el valor que queremos
-    try {
-      JSON_ConfigActual = JSON.parse(data);
-    } catch (parseErr) {
-      lanzar_error('Error al parsear el archivo de configuracion: ' + parseErr);
-      return;
-    }
-
-    if (!JSON_ConfigActual) {
-      lanzar_error('Error al leer el archivo de configuracion.');
-      return;
-    }
-
-    // Obtener el qué parametro hemos cambiado: ruta_proyecto o ruta_plantillas
-    // Reemplazar en el json original el valor del nuevo key
-    try {
-      let parametro = Object.keys(JSON_ConfigInput)[0];
-      JSON_ConfigActual[parametro] = JSON_ConfigInput[parametro];
-
-      JSON_ConfigNuevo = JSON_ConfigActual;
-    }  catch (parseErr) {
-      lanzar_error('Error al parsear el JSON o al intentar meter el nuevo valor: ' + parseErr);
-      return;
-    }
-
+  
     // Guardar la configuracion en el archivo de configuracion.
     try {
-      const jsonConfig = JSON.stringify(JSON_ConfigNuevo, null, 2);
+      const jsonConfig = JSON.stringify(JSON_Config, null, 2);
       fs.writeFileSync(CONFIG_PATH, jsonConfig);
-    }  catch (fileSaveError) {
-      lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
-      return;
-    }
 
+      // Notificar al frontend que la configuración se guardó con éxito
+      event.sender.send('configuracion-guardada', { success: true });
+      console.log("LLEGA AQ")
+
+    } catch (fileSaveError) {
+      lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
+    }
   });
-  
+
 });
+
+
 
 
 /// ------------------------------------  ///
@@ -141,15 +146,22 @@ ipcMain.on('cambiar-config-valores', (event, JSON_ConfigInput) => {
 
 
 // Manejo de IPC para abrir el diálogo de selección de archivos
-ipcMain.on('open-directory-dialog', (event) => {
+ipcMain.on('open-directory-dialog', (event, input_id) => {
 
   dialog.showOpenDialog({
     properties: ['openDirectory']
   }).then(result => {
 
     if (!result.canceled && result.filePaths.length > 0) {
-      event.sender.send('selected-directory', result.filePaths[0]);
+
+      const retorno = {
+        path: result.filePaths[0],
+        input_id: input_id
+      } 
+
+      event.sender.send('selected-directory', retorno);
     }
+
   }).catch(err => {
     console.error('Error al abrir el diálogo de selección de directorio:', err);
   });
