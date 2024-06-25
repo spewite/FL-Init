@@ -22,7 +22,6 @@ project_path = None
 
 original_stderr = None
 
-
 def sacar_mensaje(mensaje, error=False):
 
     canal_salida = sys.stderr if error else sys.stdout

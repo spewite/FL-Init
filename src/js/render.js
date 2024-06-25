@@ -34,8 +34,16 @@ const browseInputArrayConfig = document.querySelectorAll("button[data-browse-con
 
 // ----- DOMContentLoaded ---- //
 document.addEventListener("DOMContentLoaded", (e) => {
+
+  // Añadir un valor vacio al select
+  insertar_option('');
+
+  // Cargar el combo de plantillas FLP
+  cargar_plantillas();
+
   const uuid = crypto.randomUUID();
   document.getElementById("project-name").value = uuid;
+
 });
 
 // ----- CERRAR MODAL ---- //
@@ -85,13 +93,6 @@ document.getElementById('form').addEventListener('submit', function(event) {
   ipcRenderer.send('run-python-script', args);
   // Swal.fire("Ejecutando script");
 
-  // console.log(" --- INPUTS --- ");
-  // console.log(youtubeUrl);
-  // console.log(projectLocation);
-  // console.log(projectName);
-  // console.log(separateStems);
-  // console.log(templatePath);
-  // console.log(" ------------ ");
 });
 
 /// ------------------------------------  ///
@@ -109,7 +110,6 @@ document.getElementById('browse-flp-template').addEventListener('click', (e) => 
 // Botones "Browse" del modal de configuración.
 browseInputArrayConfig.forEach(browseInput => {  
   browseInput.addEventListener('click', (e) => {
-    console.log(e.target.closest("div").getElementsByTagName("INPUT")[0])
     const inputConfigId = e.target.closest("div").getElementsByTagName("INPUT")[0].id;
     ipcRenderer.send('open-directory-dialog', inputConfigId);
   });
@@ -129,22 +129,7 @@ ipcRenderer.on('selected-directory', (event, args) => {
 });
 
 ipcRenderer.on('selected-file', (event, filePath) => {
-
-  const select = document.getElementById("template-flp");
-
-  // Crea un nuevo elemento option
-  var option = document.createElement("option");
-
-  // Divide la cadena por las barras invertidas
-  let partes = filePath.split('\\');
-  const nombreArchivo = partes[partes.length-1];
-
-  // Configura el texto y el valor del nuevo elemento option
-  option.text = nombreArchivo;
-  option.value = filePath;
-
-  // Añade el nuevo elemento option al select
-  select.appendChild(option);
+  insertar_option(filePath);
 });
 
 
@@ -189,11 +174,11 @@ function guardar_configuracion()
 
 /// ------- BACKEND MODAL CONFIGURACIÓN ------  ///
 
-ipcRenderer.on('mostrar-modal', (event, valoresConfiguracion) => {  
+ipcRenderer.on('mostrar-modal', (event, valoresConfiguracionActual) => {  
   
   // Rellenar los inputs con los datos de configuración actual.
-  const {ruta_proyecto} = valoresConfiguracion;
-  const {ruta_plantillas} = valoresConfiguracion;
+  const {ruta_proyecto} = valoresConfiguracionActual;
+  const {ruta_plantillas} = valoresConfiguracionActual;
 
   inputProyectoConfig.value = ruta_proyecto;
   inputPlantillasConfig.value = ruta_plantillas;
@@ -213,6 +198,9 @@ ipcRenderer.on('configuracion-guardada', (event, config) => {
   // Poner la nueva configuración en los inputs.
   inputProjectLocation.value = jsonConfig["ruta_proyecto"];
   inputTemplatePath.value = jsonConfig["ruta_plantillas"];
+
+  // Cargar las plantillas de la nueva configuración
+  cargar_plantillas()
 });
 
 /// ------------------------------------  ///
@@ -249,4 +237,41 @@ function insertarPythonOutput(mensaje, color)
   p.setAttribute("style", `color:${color};`) 
 
   pythonOutput.appendChild(p);
+}
+
+function cargar_plantillas()
+{
+  ipcRenderer.send('pedir-lista-plantillas');
+}
+
+ipcRenderer.on('obtener-lista-plantillas', (event, json_arrays) => {
+  
+  const {rutasArchivos} = json_arrays;
+
+  rutasArchivos.forEach( rutaArchivo => {
+    insertar_option(rutaArchivo);
+  })
+});
+
+
+function insertar_option(rutaArchivo)
+{
+  const select = inputTemplatePath;
+
+  // Crea un nuevo elemento option
+  var option = document.createElement("option");
+
+  // Divide la cadena por las barras invertidas
+  let partes = rutaArchivo.split('\\');
+  const nombreArchivo = partes[partes.length-1];
+
+  // Configura el texto y el valor del nuevo elemento option
+  option.text = nombreArchivo;
+  option.value = rutaArchivo;
+
+  // Añade el nuevo elemento option al select
+  select.appendChild(option);
+
+  // Seleccionar el elemento que hemos añadido
+  select.selectedIndex = select.options.length-1;
 }
