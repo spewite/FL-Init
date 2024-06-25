@@ -83,31 +83,39 @@ app.on('window-all-closed', () => {
 ///          CAMBIAR CONFIGURACION        /// 
 /// ------------------------------------  ///
 
-function cambiar_config()
-{
-  // Leer la configuración actual para mostrarlo al abrir la modal de configuración
-  fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
-    
-    let JSON_Config;
-    
-    try {
+function obtener_configuracion() {
+  return new Promise((resolve, reject) => {
+    fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
       if (err) {
-        throw new Error('Error al leer el archivo de configuracion:' + err);
+        reject('Error al leer el archivo de configuracion: ' + err);
+        return;
       }
 
-      JSON_Config = JSON.parse(data);
+      try {
+        const JSON_Config = JSON.parse(data);
 
-      if (!JSON_Config) {
-        throw new Error('La configuración es nula o indefinida');
+        if (!JSON_Config) {
+          throw new Error('La configuración es nula o indefinida');
+        }
+
+        resolve(JSON_Config);
+      } catch (parseErr) {
+        reject('Error al parsear el archivo de configuracion: ' + parseErr);
       }
-
-      // Si todo ha salido bien mostrar la modal con la configuración actual
-      win.webContents.send('mostrar-modal', JSON_Config);
-      
-    } catch (error) {
-      lanzar_error('Error al leer el archivo de configuracion:' + error);
-    }
+    });
   });
+}
+
+
+function cambiar_config() {
+  obtener_configuracion()
+    .then(JSON_Config => {
+      // Si todo ha salido bien, mostrar la modal con la configuración actual
+      win.webContents.send('mostrar-modal', JSON_Config);
+    })
+    .catch(error => {
+      lanzar_error(error);
+    });
 }
 
 ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
@@ -233,3 +241,34 @@ function lanzar_error(err)
   console.log("\x1b[43m", err);  // Colores: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
   console.log("\x1b[0m", '');    // Resetear
 }
+
+ipcMain.on('pedir-lista-plantillas', async (event) => {
+  try {
+    const JSON_Config = await obtener_configuracion();
+    const rutaPlantillas = JSON_Config["ruta_plantillas"];
+
+    // Verificar si la ruta es correcta
+    if (!fs.existsSync(rutaPlantillas)) {
+      throw new Error('La ruta de plantillas no existe: ' + rutaPlantillas);
+    }
+
+    // Crear un array con las rutas de todos los archivos .flp.
+    const archivos = fs.readdirSync(rutaPlantillas).filter(file => path.extname(file).toLowerCase() === '.flp');
+
+    // Crear un array con las rutas completas de los archivos
+    const rutasArchivos = archivos.map(file => path.join(rutaPlantillas, file));
+
+    // Crear el objeto a devolver
+    const resultado = {
+      rutasArchivos: rutasArchivos
+    };
+
+    console.log(resultado)
+
+    // Enviar el objeto de vuelta al renderer
+    event.sender.send('obtener-lista-plantillas', resultado);
+    
+  } catch (error) {
+    lanzar_error(error.message);
+  }
+});
