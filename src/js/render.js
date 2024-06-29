@@ -1,13 +1,16 @@
 const { ipcRenderer } = require('electron');
-const { copyFileSync } = require('original-fs');
+const { copyFileSync, stat } = require('original-fs');
 const Swal = require('sweetalert2');
+
+const { ESTADOS_SALIDA } = require('../js/constants');
 
 
 /// ------------------------------------  ///
 ///               NODOS HTML              /// 
 /// ------------------------------------  ///
 
-const pythonOutput = document.getElementById("python-output");
+const pythonOutputContainer = document.getElementById("python-output-container");
+
 
 // -----  INPUTS PRINCIPALES ---- //
 
@@ -28,6 +31,9 @@ const inputProyectoConfig = document.getElementById("dialog-input-proyecto");
 const inputPlantillasConfig = document.getElementById("dialog-input-plantillas"); 
 const browseInputArrayConfig = document.querySelectorAll("button[data-browse-config]");
 
+const progressDialogContainer = document.getElementById("progress-dialog-container");
+
+
 /// ------------------------------------  ///
 ///            EVENT LISTENERS            /// 
 /// ------------------------------------  ///
@@ -37,7 +43,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
   // Añadir un valor vacio al select
   insertar_option('');
-
+  
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
 
@@ -72,6 +78,19 @@ document.getElementById('form').addEventListener('submit', function(event) {
   const projectLocation = inputProjectLocation.value;
   const projectName = inputProjectName.value;
 
+  // Validacion de campos
+  if (!youtubeUrl.trim() || !projectLocation.trim()  || !projectName.trim() )
+  {
+    let camposSinRellenar = "Los siguientes campos son obligatorios: ";
+
+    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} \n- URL de Youtube ` : camposSinRellenar;
+    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} \n- Ubicación del proyecto ` : camposSinRellenar;
+    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} \n- Nombre del proyecto ` : camposSinRellenar;
+
+    lanzar_error('', camposSinRellenar);
+    return;
+  }
+
   // Parametros opcionales
   const separateStems = inputSeparateStems.checked; 
   const templatePath = inputTemplatePath.value;
@@ -88,10 +107,62 @@ document.getElementById('form').addEventListener('submit', function(event) {
   {
     args.push(`--template-path=${templatePath}`);
   }
+
+  // Añadirle un UUID para identificar cada progreso.
+  const UUID = crypto.randomUUID();
+
+  const salida = {
+    args: args,
+    UUID: UUID
+  }
   
   // Llama a la función para ejecutar el script de Python
-  ipcRenderer.send('run-python-script', args);
+  ipcRenderer.send('run-python-script', salida);
   // Swal.fire("Ejecutando script");
+
+  // ---- VACIAR INPUTS ---- //
+
+  inputYoutubeUrl.value = "";
+  inputProjectName.value = "";
+
+  // ---- INSERTAR TEXTO DEL LOG ---- //
+
+  // Si el contenedor del log esta oculto se muestra.
+  pythonOutputContainer.parentNode.style.display = "block"
+  pythonOutputContainer.parentNode.style.opacity = 1
+  
+  // Añadir el texto
+  const p_salida = document.createElement("p");
+  const textNode = document.createTextNode(`➜ ${projectName}`);
+  p_salida.append(textNode);
+  p_salida.setAttribute("data-dialog", UUID);
+  pythonOutputContainer.appendChild(p_salida);
+
+  // Añadir una clase para activar la animación
+  p_salida.classList.add("fade-in");
+
+  p_salida.addEventListener("click", () => {
+    const data_dialog = p_salida.getAttribute("data-dialog");
+    const dialog = document.querySelector(`dialog[data-uuid='${data_dialog}']`)
+    dialog.showModal();
+  });
+
+  // ---- CREAR LA MODAL PARA EL TEXTO DEL LOG ---- //
+
+  const dialog_template = document.querySelector("dialog[data-template-dialog]");
+  const dialog = dialog_template.cloneNode(true);
+
+  dialog.setAttribute("data-uuid", UUID);
+
+  const pProgressTitle = dialog.getElementsByClassName("progress-title")[0];
+  pProgressTitle.textContent = projectName;
+
+  dialog.getElementsByClassName("x")[0].addEventListener("click", () => {
+    cerrar_dialog();
+  });
+
+  progressDialogContainer.appendChild(dialog);
+  dialog.showModal();
 
 });
 
@@ -140,19 +211,7 @@ ipcRenderer.on('selected-file', (event, filePath) => {
 
 function cerrar_dialog()
 {
-  // Swal.fire({
-  //   title: '¿Quieres guardar el valor del parámetro?',
-  //   confirmButtonText: 'Sí',
-  //   cancelButtonText: 'No',
-  //   showCancelButton: true,
-  // }).then((result) => {
-  //   console.log(result)
-  //     if (result.isConfirmed) {
-  //       guardar_configuracion();
-  //     }
-  // });
-
-  window.dialog.close();
+  document.querySelector("dialog[open]").close();
 }
 
 function guardar_configuracion()
@@ -207,36 +266,78 @@ ipcRenderer.on('configuracion-guardada', (event, config) => {
 ///         BACKEND PYTHON RETORNO        /// 
 /// ------------------------------------  ///
 
-ipcRenderer.on('python-script-stdout', (event, stdout) => {
-  insertarPythonOutput(stdout, "#5dc52a");
+ipcRenderer.on('python-script-salida', (event, data) => {
+
+  const {texto} = data;
+  const {UUID} = data;
+  const {status} = data;
+  
+  let color_texto = "white"; // Por defecto.
+
+  if (status == ESTADOS_SALIDA.ERROR)
+  {
+    color_texto = "#c52828";
+  } else if (status == ESTADOS_SALIDA.INFO)
+  {
+    color_texto = "#14bef3";
+  } else if (status == ESTADOS_SALIDA.SUCCESS)
+  {
+    color_texto = "#5dc52a";
+  }
+
+  insertarPythonOutput(texto, UUID, color_texto);
 });
 
-ipcRenderer.on('python-script-error', (event, error) => {
-  console.error(`Python Script Error: ${error}`);
-  insertarPythonOutput(error, "#c52828");
-});
 
-ipcRenderer.on('python-script-info', (event, mensaje) => {
-  insertarPythonOutput(mensaje, "#14bef3");
-});
+// ipcRenderer.on('python-script-stdout', (event, data) => {
+//   const stdout = data[data];
+//   const {uuid} = data;
+
+//   insertarPythonOutput(stdout, uuid, "#5dc52a");
+// });
+
+// ipcRenderer.on('python-script-error', (event, data) => {
+
+//   const error = data[data];
+//   const {uuid} = data;
+
+//   console.error(`Python Script Error: ${error}`);
+//   insertarPythonOutput(error,  uuid, "#c52828");
+// });
+
+// ipcRenderer.on('python-script-info', (event, mensaje) => {
+
+//   const error = data[data];
+//   const {uuid} = data;
+
+//   insertarPythonOutput(mensaje, uuid, "#14bef3");
+// });
 
 /// ------------------------------------  ///
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
 
 ipcRenderer.on('error-generico', (event, err) => {
-  alert(`Error: ${err}`);
+  lanzar_error('', err)
 });
 
-function insertarPythonOutput(mensaje, color)
+function lanzar_error(titulo, err)
 {
+  alert(`Error: ${err}`);
+}
+
+function insertarPythonOutput(mensaje, UUID, color)
+{
+  const dialog = document.querySelector(`dialog[data-uuid='${UUID}']`)
+  const div = dialog.querySelector(".body")
+
   const p = document.createElement("p");
   const nodo = document.createTextNode(mensaje);
 
   p.appendChild(nodo);
   p.setAttribute("style", `color:${color};`) 
 
-  pythonOutput.appendChild(p);
+  div.appendChild(p);
 }
 
 function cargar_plantillas()

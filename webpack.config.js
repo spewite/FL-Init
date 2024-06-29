@@ -43,5 +43,9 @@ module.exports = {
   },
 
   // Configuración de modo
-  mode: 'development' // Cambia a 'production' cuando estés listo para desplegar
+  mode: 'development', // Cambia a 'production' cuando estés listo para desplegar
+
+  // Añade esto si no está presente y tienes problemas específicos de Electron
+  target: 'electron-renderer',
+
 };

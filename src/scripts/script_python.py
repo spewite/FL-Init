@@ -29,7 +29,7 @@ def sacar_mensaje(mensaje, error=False):
     print(mensaje, file=canal_salida)
     sys.stdout.flush()
 
-def es_video_valido(url):
+def es_video_valido():
     """Verifica si la URL proporcionada es una URL válida de YouTube."""
     parsed_url = urllib.parse.urlparse(url)
     if parsed_url.scheme not in ("http", "https"):
@@ -175,12 +175,16 @@ def main(args):
     # Validar que el nombre del proyecto no tenga caracteres no permitidos por Windows.
     validar_nombre_proyecto(project_name)
 
-    # Verificar si el directorio de destino ya existe (No puede existir)
-    if os.path.exists(project_path):
-        raise FileExistsError(f"El directorio de destino '{project_path}' ya existe. Por favor, elige un nombre de proyecto diferente o cambia la ubicación del proyecto.")
+    try:
+        # Verificar si el URL es de Youtube.
+        if not es_video_valido():
+            raise ValueError("El URL debe ser de Youtube")
+
+        # Verificar si el directorio de destino ya existe (No puede existir)
+        if os.path.exists(project_path):
+            raise FileExistsError(f"El directorio de destino '{project_path}' ya existe. Por favor, elige un nombre de proyecto diferente o cambia la ubicación del proyecto.")
         
     # --  Empezar con el proceso de descarga -- #
-    try:
         download_video()
     except ValueError as ve:
         sacar_mensaje(f"Error de validacion: {str(ve)}", error=True)

@@ -6,6 +6,8 @@ const quote = require('shell-quote').quote;
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
+const { ESTADOS_SALIDA } = require('../js/constants');
+
 
 /// ------------------------------------  ///
 ///           VARIABLES GLOBALES         /// 
@@ -35,7 +37,7 @@ function createWindow() {
   win.maximize();
 
   // Abrir DevTools automáticamente
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
 
   const menu = Menu.buildFromTemplate([
     {
@@ -193,40 +195,66 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 ///             SCRIPTS PYTHON            ///
 /// ------------------------------------  ///
 
-ipcMain.on('run-python-script', (event, args) => {
+ipcMain.on('run-python-script', (event, input) => {
   let scriptPath = path.join(__dirname, '../scripts/script_python.py');
+
+  const {args} = input;
+  const {UUID} = input;
 
   const pythonProcess = spawn('python', [scriptPath, ...args]);
 
   pythonProcess.stdout.on('data', (data) => {
 
-    const message = data.toString();
+    let message = {
+      texto: data.toString(),
+      UUID: UUID,
+      status: undefined
+    }
     
-    if (message.toLowerCase().includes('error')) {
-      event.sender.send('python-script-error', message);
-    } else if (message.toLowerCase().includes('%'))  {
-      event.sender.send('python-script-info', message);
+    let {texto} = message
+    texto = texto.toLowerCase();
+
+    if (texto.includes('error')) {
+      message.status = ESTADOS_SALIDA.ERROR;
+    } else if (texto.includes('%'))  {
+      message.status = ESTADOS_SALIDA.INFO;
     } else 
     {
-      console.log(`stdout: ${message}`);
-      event.sender.send('python-script-stdout', message);
+      message.status = ESTADOS_SALIDA.SUCCESS;
     }
 
+    event.sender.send('python-script-salida', message);
   });
 
   pythonProcess.stderr.on('data', (data) => {
-    const error = data.toString();
-    console.error(`stderr: ${error}`);
-    event.sender.send('python-script-error', error);
+
+    let message = {
+      texto: data.toString(),
+      UUID: UUID,
+      status: ESTADOS_SALIDA.ERROR
+    }
+
+    event.sender.send('python-script-salida', message);
   });
 
   pythonProcess.on('close', (code) => {
     console.log(`Proceso terminado con código ${code}`);
-    if (code === 0) {
-      event.sender.send('python-script-stdout', "Script terminado con éxito");
-    } else {
-      event.sender.send('python-script-error', `Script terminado con código de error: ${code}`);
+
+    let message = {
+      texto: undefined,
+      UUID: UUID,
+      status: undefined
     }
+
+    if (code === 0) {
+      message.texto = "Script terminado con éxito"
+      message.status = ESTADOS_SALIDA.SUCCESS
+    } else {
+      message.texto = `Script terminado con código de error: ${code}`
+      message.status = ESTADOS_SALIDA.ERROR
+    }
+
+    event.sender.send('python-script-salida', message);
   });
 });
 
@@ -262,8 +290,6 @@ ipcMain.on('pedir-lista-plantillas', async (event) => {
     const resultado = {
       rutasArchivos: rutasArchivos
     };
-
-    console.log(resultado)
 
     // Enviar el objeto de vuelta al renderer
     event.sender.send('obtener-lista-plantillas', resultado);
