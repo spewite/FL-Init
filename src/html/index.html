@@ -46,8 +46,7 @@
 
   <div class="container">
     <header>
-      <h1>FL INIT</h1>
-      <p>Bienvenido al inicializador de FL Studio!</p>
+      <img src="../../assets/icon.ico" style="width: 170px; filter: drop-shadow(0 0 0.75rem orange);">
     </header>
     
     <form id="form">
@@ -76,14 +75,8 @@
       </div>
       
       <div class="input-group checkbox-group">
-        <input type="checkbox" id="separate-stems" name="separate-stems">
-        <label for="separate-stems">Separar stems</label>
-      </div>
-      
-      <div class="python-output">
-        <p>Salida Python</p>
-        <hr />
-        <div id="python-output"></div>
+        <input type="checkbox" style="cursor:pointer;" id="separate-stems" name="separate-stems">
+        <label for="separate-stems" style="cursor:pointer;">Separar stems</label>
       </div>
 
       <div class="input-group">
@@ -91,9 +84,21 @@
       </div>
     </form>
     
-    <footer>
-      <p>La consola mostrará las barras de carga y el progreso de los procesos.</p>
-    </footer>
+    <div style="opacity: 0; display:none; transition: all .5s">
+      <h3>Progreso:</h3>
+      <hr>
+      <div class="python-output-container" id="python-output-container"></div>
+    </div>
+  </div>
+  
+  <div id="progress-dialog-container">
+    <dialog data-template-dialog>
+      <div class="header">
+        <p class="progress-title"></p>
+        <p class="x">❌</p>
+      </div>
+      <div class="body"></div>
+    </dialog>
   </div>
 
   <script src="../js/render.js"></script>
