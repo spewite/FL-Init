@@ -50,20 +50,20 @@
     </header>
     
     <form id="form">
-      <div class="input-group">
+      <div class="input-group" id="youtube-input-group">
         <label for="youtube-url">URL de YouTube:</label>
-        <input type="text" id="youtube-url" placeholder="Ingresa la URL del video" value="https://www.youtube.com/watch?v=E03oGHlkzBE">
+        <input type="text" id="youtube-url" placeholder="Ingresa la URL de la canción"> <!-- value="https://www.youtube.com/watch?v=E03oGHlkzBE" -->
       </div>
       
       <div class="input-group">
         <label for="project-location">Ubicación del Proyecto:</label>
-        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto" value="C:\Users\Izeta\Desktop\TEST">
+        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto">
         <button type="button" id="browse-location">Examinar</button>
       </div>
       
-      <div class="input-group">
+      <div class="input-group" id="project-name-input-group">
         <label for="project-name">Nombre del Proyecto:</label>
-        <input type="text" id="project-name" placeholder="Nombre del proyecto" value="EEc">
+        <input type="text" id="project-name" placeholder="Nombre del proyecto">
       </div>
       
       <div class="input-group">
@@ -84,7 +84,7 @@
       </div>
     </form>
     
-    <div style="opacity: 0; display:none; transition: all .5s">
+    <div style="display:none; transition: all .5s">
       <h3>Progreso:</h3>
       <hr>
       <div class="python-output-container" id="python-output-container"></div>

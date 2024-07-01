@@ -1,16 +1,24 @@
 const { ipcRenderer } = require('electron');
-const { copyFileSync, stat } = require('original-fs');
 const Swal = require('sweetalert2');
 
 const { ESTADOS_SALIDA } = require('../js/constants');
 
+// Disparar el evento change manualmente
+const changeEvent = new Event('change');
+
+// Configuración del tema oscuro para SweetAlert2
+const darkThemeOptions = {
+  background: '#1e1e1e',
+  color: '#ffffff',
+  confirmButtonColor: '#3085d6',
+  cancelButtonColor: '#d33',
+};
 
 /// ------------------------------------  ///
 ///               NODOS HTML              /// 
 /// ------------------------------------  ///
 
 const pythonOutputContainer = document.getElementById("python-output-container");
-
 
 // -----  INPUTS PRINCIPALES ---- //
 
@@ -31,8 +39,10 @@ const inputProyectoConfig = document.getElementById("dialog-input-proyecto");
 const inputPlantillasConfig = document.getElementById("dialog-input-plantillas"); 
 const browseInputArrayConfig = document.querySelectorAll("button[data-browse-config]");
 
+// -----  CONTENEDORES ---- //
 const progressDialogContainer = document.getElementById("progress-dialog-container");
-
+const youtubeInputGroup = document.getElementById("youtube-input-group");
+const projectNameInputGroup = document.getElementById("project-name-input-group");
 
 /// ------------------------------------  ///
 ///            EVENT LISTENERS            /// 
@@ -43,13 +53,10 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
   // Añadir un valor vacio al select
   insertar_option('');
+  document.querySelector("#template-flp option").textContent = '(sin plantilla)'
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
-
-  const uuid = crypto.randomUUID();
-  document.getElementById("project-name").value = uuid;
-
 });
 
 // ----- CERRAR MODAL ---- //
@@ -68,6 +75,107 @@ window.addEventListener("click", (e) => {
   e.target.tagName == "DIALOG" && cerrar_dialog();
 });
 
+// ----- VALIDACION URL VALIDA ---- //
+inputYoutubeUrl.addEventListener("change", () => {
+
+  const url = inputYoutubeUrl.value;
+  const urlEsValida = validarURLYoutube(url);
+  const warning_p = youtubeInputGroup.querySelector(".warning");
+
+  // Si el campo está vacio quitamos el warning
+  // Si ya muestra el mensaje y el usuario mete un valor correcto quitamos el warning 
+  if (warning_p && urlEsValida || !url)
+  {
+    // Agregar la clase de animación
+    warning_p.classList.add("fade-out");
+
+    // Esperar a que la animación termine y eliminar el elemento del DOM
+    warning_p.addEventListener('animationend', function() {
+      // Eliminar el elemento del DOM
+      warning_p.remove();
+    }, { once: true });
+
+    return
+  } 
+
+  // Si la url no es válida y no tiene puesta la advertencia.
+  if (!urlEsValida && !warning_p)
+  {
+    const warning_p = document.createElement("p");
+    warning_p.textContent = "⚠️ La URL no parece ser de Youtube!"
+    warning_p.setAttribute("class", "warning slide-fade-in");
+
+    youtubeInputGroup.append(warning_p);
+  }
+
+})
+
+// ----- VALIDACION NOMBRE DE PROYECTO VÁLIDO ---- //
+inputProjectName.addEventListener("change", () => {
+  validarRutaProyectoValido();
+});
+
+inputProjectLocation.addEventListener("change", () => {
+  validarRutaProyectoValido();
+});
+
+function validarRutaProyectoValido()
+{
+  const ruta = inputProjectLocation.value;
+  const directorio = inputProjectName.value;
+
+  // Si alguno de los dos inputs está vacio se quita el mensaje de error si estuviese y se sale de la funcion.
+  if (!ruta || !directorio)
+  {
+    eliminarErrorNombreProyecto();
+    return
+  }
+
+  const data = {
+    ruta: ruta,
+    directorio: directorio
+  }
+
+  ipcRenderer.send("existe-directorio", data);
+}
+
+ipcRenderer.on('existe-directorio-retorno', (event, data) => {
+
+  const {existeDirectorio} = data;
+  const {path} = data;
+
+  if (existeDirectorio)
+  {
+    // Si el directorio existe mostrar el mensaje de error
+    const error_p = document.createElement("p");
+    error_p.innerHTML = `<p>❌ El directorio <span style="font-weight: bold; font-style: italic;">${path}</span> ya existe!<p>`
+    error_p.setAttribute("class", "error slide-fade-in");
+
+    projectNameInputGroup.append(error_p);
+  } else 
+  {
+    eliminarErrorNombreProyecto();
+  }
+});
+
+function eliminarErrorNombreProyecto()
+{
+  const error_p = projectNameInputGroup.querySelector(".error");
+
+  // Si el directorio no existe y se esta mostrando un mensaje de error, se quita.
+  if (error_p)
+  {
+    // Agregar la clase de animación
+    error_p.classList.add("fade-out");
+    
+    // Esperar a que la animación termine y eliminar el elemento del DOM
+    error_p.addEventListener('animationend', function() {
+      // Eliminar el elemento del DOM
+      error_p.remove();
+    }, { once: true });
+  }
+}
+
 // ----- FORM SUBMIT ---- //
 
 document.getElementById('form').addEventListener('submit', function(event) {
@@ -83,13 +191,20 @@ document.getElementById('form').addEventListener('submit', function(event) {
   {
     let camposSinRellenar = "Los siguientes campos son obligatorios: ";
 
-    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} \n- URL de Youtube ` : camposSinRellenar;
-    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} \n- Ubicación del proyecto ` : camposSinRellenar;
-    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} \n- Nombre del proyecto ` : camposSinRellenar;
+    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} <br /> - URL de Youtube ` : camposSinRellenar;
+    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} <br /> - Ubicación del proyecto ` : camposSinRellenar;
+    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} <br /> - Nombre del proyecto ` : camposSinRellenar;
 
-    lanzar_error('', camposSinRellenar);
+    lanzar_error('Error de validación', camposSinRellenar);
     return;
   }
+  
+  const error_p = projectNameInputGroup.querySelector(".error");
+  if (error_p)
+  {
+    lanzar_error('Error de validación', `${error_p.innerHTML} <br/> Cambia la ubicación del proyecto o eliga un nombre de proyecto único.`);
+    return
+  } 
 
   // Parametros opcionales
   const separateStems = inputSeparateStems.checked; 
@@ -118,10 +233,8 @@ document.getElementById('form').addEventListener('submit', function(event) {
   
   // Llama a la función para ejecutar el script de Python
   ipcRenderer.send('run-python-script', salida);
-  // Swal.fire("Ejecutando script");
 
   // ---- VACIAR INPUTS ---- //
-
   inputYoutubeUrl.value = "";
   inputProjectName.value = "";
 
@@ -129,7 +242,6 @@ document.getElementById('form').addEventListener('submit', function(event) {
 
   // Si el contenedor del log esta oculto se muestra.
   pythonOutputContainer.parentNode.style.display = "block"
-  pythonOutputContainer.parentNode.style.opacity = 1
   
   // Añadir el texto
   const p_salida = document.createElement("p");
@@ -195,8 +307,9 @@ ipcRenderer.on('selected-directory', (event, args) => {
   const {path} = args;
   const {input_id} = args;
 
-  document.getElementById(input_id).value = path; 
-  
+  const input = document.getElementById(input_id); 
+  input.value = path; 
+  input.dispatchEvent(changeEvent); // Dispara el evento 'change'
 });
 
 ipcRenderer.on('selected-file', (event, filePath) => {
@@ -248,7 +361,11 @@ ipcRenderer.on('mostrar-modal', (event, valoresConfiguracionActual) => {
 
 ipcRenderer.on('configuracion-guardada', (event, config) => {
   
-  Swal.fire("La configuración se ha guardado con éxito!"); 
+  Swal.fire({
+    text: "La configuración se ha guardado con éxito!",
+    icon: "success",
+    ...darkThemeOptions
+  });
   
   let {jsonConfig} = config 
   
@@ -288,42 +405,22 @@ ipcRenderer.on('python-script-salida', (event, data) => {
   insertarPythonOutput(texto, UUID, color_texto);
 });
 
-
-// ipcRenderer.on('python-script-stdout', (event, data) => {
-//   const stdout = data[data];
-//   const {uuid} = data;
-
-//   insertarPythonOutput(stdout, uuid, "#5dc52a");
-// });
-
-// ipcRenderer.on('python-script-error', (event, data) => {
-
-//   const error = data[data];
-//   const {uuid} = data;
-
-//   console.error(`Python Script Error: ${error}`);
-//   insertarPythonOutput(error,  uuid, "#c52828");
-// });
-
-// ipcRenderer.on('python-script-info', (event, mensaje) => {
-
-//   const error = data[data];
-//   const {uuid} = data;
-
-//   insertarPythonOutput(mensaje, uuid, "#14bef3");
-// });
-
 /// ------------------------------------  ///
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
 
 ipcRenderer.on('error-generico', (event, err) => {
-  lanzar_error('', err)
+  lanzar_error('Error', err)
 });
 
 function lanzar_error(titulo, err)
 {
-  alert(`Error: ${err}`);
+  Swal.fire({
+    title: titulo,
+    html: `<p>${err}</p>`,
+    icon: "error",
+    ...darkThemeOptions
+  });
 }
 
 function insertarPythonOutput(mensaje, UUID, color)
@@ -375,4 +472,18 @@ function insertar_option(rutaArchivo)
 
   // Seleccionar el elemento que hemos añadido
   select.selectedIndex = select.options.length-1;
+}
+
+function validarURLYoutube(url) {
+  if (url !== undefined && url !== '') { // Verificar que la URL no sea undefined ni vacía
+    var regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    var match = url.match(regExp); // Realizar la coincidencia con la expresión regular
+    if (match) { // Verificar si hubo coincidencia
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
 }
