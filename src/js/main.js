@@ -17,7 +17,7 @@ const CONFIG_PATH = path.join(__dirname, '../../config.json');
 let win;
 
 /// ------------------------------------  ///
-///          CONFIGURACIÓN BACKEND        /// 
+///         CONFIGURACIÓN ELECTRON        /// 
 /// ------------------------------------  ///
 
 function createWindow() {
@@ -102,6 +102,22 @@ ipcMain.on('existe-directorio', (event, data) => {
   });
 });
 
+/// ------------------------------------  ///
+///          OBTENER CONFIGURACION        /// 
+/// ------------------------------------  ///
+
+ipcMain.on('obtener-configuracion', (event, data) => {
+
+  obtener_configuracion()
+    .then(JSON_Config => {
+      // Si todo ha salido bien, mostrar la modal con la configuración actual
+      win.webContents.send('obtener-configuracion', JSON_Config);
+    })
+    .catch(error => {
+      lanzar_error(error);
+    });
+
+});
 
 /// ------------------------------------  ///
 ///          CAMBIAR CONFIGURACION        /// 

@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, ipcMain } = require('electron');
 const Swal = require('sweetalert2');
 
 const { ESTADOS_SALIDA } = require('../js/constants');
@@ -57,6 +57,14 @@ document.addEventListener("DOMContentLoaded", (e) => {
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
+
+  // Cargar el parametro ruta de proyectos 
+  ipcRenderer.send("obtener-configuracion");
+
+  ipcRenderer.on('obtener-configuracion', (event, JSON_Config) => {
+    inputProjectLocation.value = JSON_Config['ruta_proyecto'];
+  });
+
 });
 
 // ----- CERRAR MODAL ---- //
@@ -125,7 +133,7 @@ function validarRutaProyectoValido()
   const directorio = inputProjectName.value;
 
   // Si alguno de los dos inputs está vacio se quita el mensaje de error si estuviese y se sale de la funcion.
-  if (!ruta || !directorio)
+  if (!ruta.trim() || !directorio.trim())
   {
     eliminarErrorNombreProyecto();
     return
