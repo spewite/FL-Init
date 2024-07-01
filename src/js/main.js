@@ -16,7 +16,6 @@ const { ESTADOS_SALIDA } = require('../js/constants');
 const CONFIG_PATH = path.join(__dirname, '../../config.json');
 let win;
 
-
 /// ------------------------------------  ///
 ///          CONFIGURACIÓN BACKEND        /// 
 /// ------------------------------------  ///
@@ -37,7 +36,7 @@ function createWindow() {
   win.maximize();
 
   // Abrir DevTools automáticamente
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
 
   const menu = Menu.buildFromTemplate([
     {
@@ -80,6 +79,29 @@ app.on('window-all-closed', () => {
   }
 });
 
+/// ------------------------------------  ///
+///              VALIDACIONES             /// 
+/// ------------------------------------  ///
+
+ipcMain.on('existe-directorio', (event, data) => {
+
+  const {ruta} = data;
+  const {directorio} = data;
+
+  const rutaParaValidar = path.join(ruta, directorio)
+
+  // Verificar si la ruta existe y retornar el resultado.
+  fs.access(rutaParaValidar, fs.constants.F_OK, (err) => {
+
+    const responseData = {
+      existeDirectorio: !err,
+      path: rutaParaValidar
+    }
+
+    event.sender.send('existe-directorio-retorno', responseData);
+  });
+});
+
 
 /// ------------------------------------  ///
 ///          CAMBIAR CONFIGURACION        /// 
@@ -108,7 +130,6 @@ function obtener_configuracion() {
   });
 }
 
-
 function cambiar_config() {
   obtener_configuracion()
     .then(JSON_Config => {
@@ -120,7 +141,7 @@ function cambiar_config() {
     });
 }
 
-ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
+ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {mn
 
   // CONFIG_PATH está declarado arriba de todo. 
   
