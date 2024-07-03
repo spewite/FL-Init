@@ -1,21 +1,19 @@
 {
   "name": "flinit",
   "version": "1.0.0",
-  "description": "",
+  "description": "FL INIT es una aplicación diseñado para simplificar la creación de proyectos en FL Studio utilizando canciones de YouTube. Esta aplicación automatiza la descarga de audio y facilita la configuración inicial de proyectos en FL Studio. Los usuarios pueden seleccionar una plantilla .flp específica para cada proyecto y, opcionalmente, extraer los stems de las canciones.",
   "main": "src/js/main.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "build": "webpack --mode production",
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@sweetalert2/theme-dark": "^5.0.16",
-    "electron": "^30.0.2",
     "shell-quote": "^1.8.1",
     "sweetalert2": "^11.10.8"
   },
@@ -26,6 +24,54 @@
     "css-loader": "^7.1.1",
     "style-loader": "^4.0.0",
     "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "electron": "^30.0.2",
+    "electron-builder": "^24.3.0"
+  },
+  "build": {
+    "asarUnpack": [
+      "**/config.json",
+      "**/scripts/script_python.py",
+      "**/assets/icon.ico",
+      "**/assets/icon.png"
+    ],
+    "productName": "FL-Init",
+    "appId": "com.flinit.app",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "assets/",
+      "src/",
+      "scripts/",
+      "config.json",
+      "package.json",
+      "webpack.config.js"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ],
+      "artifactName": "${productName} Setup.${ext}" 
+    },
+    "mac": {
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true, 
+      "perMachine": true, 
+      "createDesktopShortcut": true, 
+      "createStartMenuShortcut": true, 
+      "shortcutName": "FL-Init"
+    }
   }
 }

@@ -1,4 +1,8 @@
 
+/// ------------------------------------  ///
+///           VARIABLES GLOBALES          /// 
+/// ------------------------------------  ///
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -8,13 +12,60 @@ const { spawn } = require('child_process');
 
 const { ESTADOS_SALIDA } = require('../js/constants');
 
-
-/// ------------------------------------  ///
-///           VARIABLES GLOBALES         /// 
-/// ------------------------------------  ///
-
-const CONFIG_PATH = path.join(__dirname, '../../config.json');
 let win;
+
+/// ------------------------------------  ///
+///       GUARDAR ARCHIVOS EN APPDATA     /// 
+/// ------------------------------------  ///
+
+/// -----------  DIRECTORIOS -----------  ///
+
+// APPDATA
+const ASSETS_PATH = path.join(app.getPath('userData'), 'assets');
+const SCRIPTS_PATH = path.join(app.getPath('userData'), 'scripts');
+
+// ASAR
+const ASAR_PATH = app.getAppPath();
+
+if (!fs.existsSync(ASSETS_PATH)) {
+  fs.mkdirSync(ASSETS_PATH);
+}
+
+// Crear el directorio assets si no existe
+if (!fs.existsSync(SCRIPTS_PATH)) {
+  fs.mkdirSync(SCRIPTS_PATH);
+}
+
+/// -----------  ARCHIVOS -----------  ///
+
+const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
+const SCRIPT_PYTHON_PATH = path.join(SCRIPTS_PATH, 'script_python.py');
+
+const ICON_ICO_PATH = path.join(ASSETS_PATH, 'icon.ico');
+const ICON_PNG_PATH = path.join(ASSETS_PATH, 'icon.png');
+const ICON_PATH = path.join(ASSETS_PATH, process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+
+// ICONO ICO
+const sourceIcoPath = path.join(ASAR_PATH, 'assets', 'icon.ico');
+if (!fs.existsSync(ICON_ICO_PATH)) {
+  fs.copyFileSync(sourceIcoPath, ICON_ICO_PATH);
+}
+
+// ICONO PNG
+const sourcePngPath = path.join(ASAR_PATH, 'assets', 'icon.png');
+if (!fs.existsSync(ICON_PNG_PATH)) {
+  fs.copyFileSync(sourcePngPath, ICON_PNG_PATH);
+}
+
+// CONFIG
+if (!fs.existsSync(CONFIG_PATH)) {
+  fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
+}
+
+// PYTHON SCRIPT
+if (!fs.existsSync(SCRIPT_PYTHON_PATH)) {
+  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+}
 
 /// ------------------------------------  ///
 ///         CONFIGURACIÓN ELECTRON        /// 
@@ -27,8 +78,11 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
-    }
+    },
+    icon: path.join(__dirname, '../assets/icon.ico') 
+     // ICON_PATH // Ruta al archivo de ícono
   });
+
 
   win.loadFile(path.join(__dirname, '../html/index.html'));
 
@@ -157,7 +211,7 @@ function cambiar_config() {
     });
 }
 
-ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {mn
+ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
 
   // CONFIG_PATH está declarado arriba de todo. 
   
@@ -233,7 +287,7 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 /// ------------------------------------  ///
 
 ipcMain.on('run-python-script', (event, input) => {
-  let scriptPath = path.join(__dirname, '../scripts/script_python.py');
+  let scriptPath = SCRIPT_PYTHON_PATH;
 
   const {args} = input;
   const {UUID} = input;
