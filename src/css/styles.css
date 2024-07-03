@@ -349,8 +349,8 @@ dialog[data-uuid] .x {
 }
 
 dialog[data-uuid] .body {
-  max-height: 800px;
-  height: 800px;
+  max-height: 600px;
+  height: 600px;
   overflow-y: scroll;
   background: #1b1b1b;
   overflow-x: hidden;
