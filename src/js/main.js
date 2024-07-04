@@ -6,6 +6,8 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const log = require('electron-log');
+const { autoUpdater } = require('electron-updater');
 const quote = require('shell-quote').quote;
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
@@ -115,6 +117,9 @@ function createWindow() {
   ]);
 
   Menu.setApplicationMenu(menu);
+
+  // Verificar actualizaciones al iniciar la aplicación
+  autoUpdater.checkForUpdatesAndNotify();
 }
 
 app.whenReady().then(() => {
@@ -131,6 +136,53 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+
+/// ------------------------------------  ///
+///            ACTUALIZACIONES            /// 
+/// ------------------------------------  ///
+
+console.log(`NODE ENV: ${process.env.NODE_ENV}`)
+
+log.info('Iniciando aplicacion...');
+
+// Forzar la configuración de actualización durante el desarrollo
+if (process.env.NODE_ENV !== 'production') {
+  autoUpdater.updateConfigPath = path.join(__dirname, '../../dev-app-update.yml');
+}
+
+app.on('ready', () => {
+  autoUpdater.logger = log;
+  autoUpdater.logger.transports.file.level = 'debug';
+  autoUpdater.autoDownload = false;
+  autoUpdater.allowDowngrade = true;
+  autoUpdater.forceDevUpdateConfig = true;
+  autoUpdater.allowPrerelease = true;
+  
+  autoUpdater.checkForUpdatesAndNotify().catch(error => {
+    log.error('Error al buscar actualizaciones:', error);
+    lanzar_error('Error al buscar actualizaciones: ' + error.message);
+  });
+  
+});
+
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Actualización disponible',
+    message: 'Hay una nueva versión disponible. Se está descargando...',
+  });
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Actualización lista',
+    message: 'Una nueva versión ha sido descargada. La aplicación se reiniciará para aplicar la actualización.',
+  }).then(() => {
+    autoUpdater.quitAndInstall();
+  });
 });
 
 /// ------------------------------------  ///
