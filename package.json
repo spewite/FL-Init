@@ -5,15 +5,19 @@
   "main": "src/js/main.js",
   "scripts": {
     "build": "webpack --mode production",
-    "start": "electron .",
+    "start": "cross-env NODE_ENV=development electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish=never",
+    "publish": "node load-env.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@sweetalert2/theme-dark": "^5.0.16",
+    "dotenv": "^16.4.5",
+    "electron-log": "^5.1.5",
+    "electron-updater": "^6.2.1",
     "shell-quote": "^1.8.1",
     "sweetalert2": "^11.10.8"
   },
@@ -21,12 +25,13 @@
     "@babel/core": "^7.24.5",
     "@babel/preset-env": "^7.24.5",
     "babel-loader": "^9.1.3",
+    "cross-env": "^7.0.3",
     "css-loader": "^7.1.1",
+    "electron": "^30.0.2",
+    "electron-builder": "^24.3.0",
     "style-loader": "^4.0.0",
     "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4",
-    "electron": "^30.0.2",
-    "electron-builder": "^24.3.0"
+    "webpack-cli": "^5.1.4"
   },
   "build": {
     "asarUnpack": [
@@ -37,6 +42,25 @@
     ],
     "productName": "FL-Init",
     "appId": "com.flinit.app",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "spewite",
+        "repo": "FL-Init"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "artifactName": "${productName}-${version}-mac.${ext}"
+    },
+    "linux": {
+      "target": "AppImage",
+      "artifactName": "${productName}-${version}-linux.${ext}"
+    },
     "directories": {
       "output": "dist",
       "buildResources": "assets"
@@ -49,28 +73,12 @@
       "package.json",
       "webpack.config.js"
     ],
-    "win": {
-      "icon": "assets/icon.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64", "ia32"]
-        }
-      ],
-      "artifactName": "${productName} Setup.${ext}" 
-    },
-    "mac": {
-      "icon": "assets/icon.png"
-    },
-    "linux": {
-      "icon": "assets/icon.png"
-    },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true, 
-      "perMachine": true, 
-      "createDesktopShortcut": true, 
-      "createStartMenuShortcut": true, 
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
       "shortcutName": "FL-Init"
     }
   }
