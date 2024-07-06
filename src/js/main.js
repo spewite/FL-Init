@@ -393,10 +393,10 @@ ipcMain.on('pedir-lista-plantillas', async (event) => {
     const rutaPlantillas = JSON_Config["ruta_plantillas"];
 
     // Verificar si la ruta es correcta
-    // No queremos mostar un error porque si no tiene la configuracion puesta toca los cojones
-    // if (!fs.existsSync(rutaPlantillas)) {
-    //   throw new Error('La ruta de plantillas no existe: ' + rutaPlantillas);
-    // }
+    if (!fs.existsSync(rutaPlantillas)) { 
+      console.log("No existe la ruta de la plantillas"); // No queremos mostar mensaje en pantalla solo en terminal.
+      return;
+    }
 
     // Crear un array con las rutas de todos los archivos .flp.
     const archivos = fs.readdirSync(rutaPlantillas).filter(file => path.extname(file).toLowerCase() === '.flp');
