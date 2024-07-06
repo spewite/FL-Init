@@ -117,9 +117,6 @@ function createWindow() {
   ]);
 
   Menu.setApplicationMenu(menu);
-
-  // Verificar actualizaciones al iniciar la aplicación
-  autoUpdater.checkForUpdatesAndNotify();
 }
 
 app.whenReady().then(() => {
@@ -130,6 +127,9 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+
+  // Verificar actualizaciones al iniciar la aplicación
+  autoUpdater.checkForUpdates();
 });
 
 app.on('window-all-closed', () => {
@@ -143,36 +143,18 @@ app.on('window-all-closed', () => {
 ///            ACTUALIZACIONES            /// 
 /// ------------------------------------  ///
 
-console.log(`NODE ENV: ${process.env.NODE_ENV}`)
-
-log.info('Iniciando aplicacion...');
-
-// Forzar la configuración de actualización durante el desarrollo
-if (process.env.NODE_ENV !== 'production') {
-  autoUpdater.updateConfigPath = path.join(__dirname, '../../dev-app-update.yml');
-}
-
 app.on('ready', () => {
-  autoUpdater.logger = log;
-  autoUpdater.logger.transports.file.level = 'debug';
   autoUpdater.autoDownload = false;
-  autoUpdater.allowDowngrade = true;
-  autoUpdater.forceDevUpdateConfig = true;
-  autoUpdater.allowPrerelease = true;
-  
-  autoUpdater.checkForUpdatesAndNotify().catch(error => {
-    log.error('Error al buscar actualizaciones:', error);
-    lanzar_error('Error al buscar actualizaciones: ' + error.message);
-  });
-  
+  autoUpdater.autoInstallOnAppQuit = true
 });
 
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
     type: 'info',
     title: 'Actualización disponible',
-    message: 'Hay una nueva versión disponible. Se está descargando...',
+    message: 'Hay una nueva versión disponible. Se está descargando... (Puedes cerrar el mensaje)',
   });
+  autoUpdater.downloadUpdate();
 });
 
 autoUpdater.on('update-downloaded', (info) => {
@@ -183,6 +165,16 @@ autoUpdater.on('update-downloaded', (info) => {
   }).then(() => {
     autoUpdater.quitAndInstall();
   });
+});
+
+autoUpdater.on('error', (error) => {
+  log.error('Error en el auto-updater:', error);
+  lanzar_error('Error en el auto-updater:', error);
+});
+
+// Enviar la versión de la aplicación cuando el renderizador lo solicite
+ipcMain.handle('get-app-version', async () => {
+  return app.getVersion();
 });
 
 /// ------------------------------------  ///
