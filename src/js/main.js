@@ -43,22 +43,6 @@ if (!fs.existsSync(SCRIPTS_PATH)) {
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 const SCRIPT_PYTHON_PATH = path.join(SCRIPTS_PATH, 'script_python.py');
 
-const ICON_ICO_PATH = path.join(ASSETS_PATH, 'icon.ico');
-const ICON_PNG_PATH = path.join(ASSETS_PATH, 'icon.png');
-const ICON_PATH = path.join(ASSETS_PATH, process.platform === 'win32' ? 'icon.ico' : 'icon.png');
-
-// ICONO ICO
-const sourceIcoPath = path.join(ASAR_PATH, 'assets', 'icon.ico');
-if (!fs.existsSync(ICON_ICO_PATH)) {
-  fs.copyFileSync(sourceIcoPath, ICON_ICO_PATH);
-}
-
-// ICONO PNG
-const sourcePngPath = path.join(ASAR_PATH, 'assets', 'icon.png');
-if (!fs.existsSync(ICON_PNG_PATH)) {
-  fs.copyFileSync(sourcePngPath, ICON_PNG_PATH);
-}
-
 // CONFIG
 if (!fs.existsSync(CONFIG_PATH)) {
   fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
@@ -80,9 +64,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
-    },
-    icon: path.join(__dirname, '../assets/icon.ico') 
-     // ICON_PATH // Ruta al archivo de ícono
+    }
   });
 
 

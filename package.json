@@ -5,7 +5,7 @@
   "main": "src/js/main.js",
   "scripts": {
     "build": "webpack --mode production",
-    "start": "cross-env NODE_ENV=development electron .",
+    "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
     "publish": "node load-env.js"
@@ -36,9 +36,9 @@
   "build": {
     "asarUnpack": [
       "**/config.json",
-      "**/scripts/script_python.py",
-      "**/assets/icon.ico",
-      "**/assets/icon.png"
+      "**/scripts/script_python.py",  
+      "**/icons/icon.ico",
+      "**/icons/icon.png"
     ],
     "productName": "FL-Init",
     "appId": "com.flinit.app",
@@ -52,23 +52,26 @@
     ],
     "win": {
       "target": "nsis",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "icon": "icons/icon.ico"
     },
     "mac": {
       "target": "dmg",
-      "artifactName": "${productName}-${version}-mac.${ext}"
+      "artifactName": "${productName}-${version}-mac.${ext}",
+      "icon": "icons/icon.png"
     },
     "linux": {
       "target": "AppImage",
-      "artifactName": "${productName}-${version}-linux.${ext}"
+      "artifactName": "${productName}-${version}-linux.${ext}",
+      "icon": "icons/icon.png"
     },
     "directories": {
-      "output": "dist",
-      "buildResources": "assets"
+      "output": "dist"
     },
     "files": [
       "assets/",
       "src/",
+      "icons/",
       "scripts/",
       "config.json",
       "package.json",
@@ -80,7 +83,8 @@
       "perMachine": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "FL-Init"
+      "shortcutName": "FL-Init",
+      "include": "build/installer.nsh"
     }
   }
 }
