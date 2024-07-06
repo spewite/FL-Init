@@ -45,6 +45,14 @@ const youtubeInputGroup = document.getElementById("youtube-input-group");
 const projectNameInputGroup = document.getElementById("project-name-input-group");
 
 /// ------------------------------------  ///
+///           PONER LA VERSION            /// 
+/// ------------------------------------  ///
+
+ipcRenderer.invoke('get-app-version').then(version => {
+  document.getElementById('app-version').innerText = `v${version}`;
+});
+
+/// ------------------------------------  ///
 ///            EVENT LISTENERS            /// 
 /// ------------------------------------  ///
 

@@ -11,7 +11,7 @@
     "publish": "node load-env.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "izeta",
   "license": "ISC",
   "dependencies": {
     "@sweetalert2/theme-dark": "^5.0.16",
@@ -46,7 +46,8 @@
       {
         "provider": "github",
         "owner": "spewite",
-        "repo": "FL-Init"
+        "repo": "FL-Init",
+        "releaseType": "release"
       }
     ],
     "win": {
