@@ -1,0 +1,7 @@
+pytube==15.0.0
+moviepy==1.0.3
+pyflp==2.2.1
+demucs==4.0.1
+torch==2.3.0
+torchaudio==2.3.0
+numpy<2.0.0
