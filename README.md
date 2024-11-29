@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/assets/icon.ico" alt="Logo FLInit" width="200"/>
+  <img src="/icons/icon.png" alt="Logo FLInit" width="200"/>
 </p>
 
 # FL INIT
