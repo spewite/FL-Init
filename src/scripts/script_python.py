@@ -177,7 +177,7 @@ def main(args):
 
     try:
         # Verificar si el URL es de Youtube. 
-        # Lo tengo comentado a posta. Si el video no es valido va a lanzar un error el script igualmente,.
+        # Lo tengo comentado a posta. Si el video no es valido va a lanzar un error el script igualmente.
         # if not es_video_valido():
         #     raise ValueError("El URL debe ser de Youtube")
 
