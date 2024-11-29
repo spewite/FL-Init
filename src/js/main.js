@@ -16,6 +16,45 @@ const { ESTADOS_SALIDA } = require('../js/constants');
 
 let win;
 
+/// -------------------------------------  ///
+///      INSTALAR FFMPEG SI NO LO ESTA     /// 
+/// -------------------------------------  ///
+
+// Paths for FFmpeg
+const FFmpegPath = path.join(app.getPath('userData'), 'ffmpeg');
+const FFmpegBinary = path.join(FFmpegPath, 'ffmpeg.exe');
+
+// Function to check if FFmpeg is installed
+function checkFFmpeg() {
+  if (!fs.existsSync(FFmpegBinary)) {
+    console.log('FFmpeg no está instalado, procediendo a la instalación...');
+    installFFmpeg();
+  } else {
+    console.log('FFmpeg está instalado.');
+  }
+}
+
+// Function to copy FFmpeg from the package to the user data directory
+function installFFmpeg() {
+  const ffmpegSource = path.join(app.getAppPath(), 'src', 'ffmpeg');
+
+  // Log the paths for debugging
+  console.log('ffmpegSource:', ffmpegSource);
+  console.log('FFmpegPath:', FFmpegPath);
+
+  try {
+    fs.mkdirSync(FFmpegPath, { recursive: true });
+
+    fs.copyFileSync(path.join(ffmpegSource, 'ffmpeg.exe'), FFmpegBinary);
+    fs.copyFileSync(path.join(ffmpegSource, 'ffplay.exe'), path.join(FFmpegPath, 'ffplay.exe'));
+    fs.copyFileSync(path.join(ffmpegSource, 'ffprobe.exe'), path.join(FFmpegPath, 'ffprobe.exe'));
+
+    console.log('FFmpeg instalado correctamente.');
+  } catch (error) {
+    console.error('Error al instalar FFmpeg:', error);
+  }
+}
+
 /// ------------------------------------  ///
 ///       GUARDAR ARCHIVOS EN APPDATA     /// 
 /// ------------------------------------  ///
@@ -102,6 +141,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  checkFFmpeg();
   createWindow();
 
   app.on('activate', () => {
@@ -313,12 +353,13 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 /// ------------------------------------  ///
 
 ipcMain.on('run-python-script', (event, input) => {
-  let scriptPath = SCRIPT_PYTHON_PATH;
+  const scriptPath = SCRIPT_PYTHON_PATH;
+  const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
 
   const {args} = input;
   const {UUID} = input;
 
-  const pythonProcess = spawn('python', [scriptPath, ...args]);
+  const pythonProcess = spawn(venvPath, [scriptPath, ...args]);
 
   pythonProcess.stdout.on('data', (data) => {
 
