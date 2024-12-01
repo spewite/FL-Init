@@ -27,10 +27,10 @@ const FFmpegBinary = path.join(FFmpegPath, 'ffmpeg.exe');
 // Function to check if FFmpeg is installed
 function checkFFmpeg() {
   if (!fs.existsSync(FFmpegBinary)) {
-    console.log('FFmpeg no está instalado, procediendo a la instalación...');
+    console.log('FFmpeg no esta instalado, procediendo a la instalacion...');
     installFFmpeg();
   } else {
-    console.log('FFmpeg está instalado.');
+    console.log('FFmpeg esta instalado.');
   }
 }
 
@@ -353,7 +353,8 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 /// ------------------------------------  ///
 
 ipcMain.on('run-python-script', (event, input) => {
-  const scriptPath = SCRIPT_PYTHON_PATH;
+  const scriptPath = 'src/scripts/script_python.py';
+  // const scriptPath = SCRIPT_PYTHON_PATH;
   const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
 
   const {args} = input;
