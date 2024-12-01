@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-from pytube import YouTube
+from pytubefix import YouTube
 from moviepy.editor import AudioFileClip
 import moviepy.config as mp_config
 import urllib.parse
