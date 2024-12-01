@@ -353,8 +353,8 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 /// ------------------------------------  ///
 
 ipcMain.on('run-python-script', (event, input) => {
-  const scriptPath = 'src/scripts/script_python.py';
-  // const scriptPath = SCRIPT_PYTHON_PATH;
+  // const scriptPath = 'src/scripts/script_python.py';
+  const scriptPath = SCRIPT_PYTHON_PATH;
   const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
 
   const {args} = input;
