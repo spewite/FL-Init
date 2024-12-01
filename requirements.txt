@@ -1,4 +1,4 @@
-pytube==15.0.0
+pytubefix==8.7.0
 moviepy==1.0.3
 pyflp==2.2.1
 demucs==4.0.1
