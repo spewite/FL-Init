@@ -17,6 +17,7 @@
   "dependencies": {
     "@sweetalert2/theme-dark": "^5.0.16",
     "dotenv": "^16.4.5",
+    "electron-is-dev": "^3.0.1",
     "electron-log": "^5.1.5",
     "electron-updater": "^6.2.1",
     "shell-quote": "^1.8.1",
@@ -37,7 +38,7 @@
   "build": {
     "asarUnpack": [
       "**/config.json",
-      "**/scripts/script_python.py",  
+      "**/scripts/script_python.py",
       "**/icons/icon.ico",
       "**/icons/icon.png"
     ],
