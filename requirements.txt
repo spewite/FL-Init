@@ -1,4 +1,4 @@
-pytubefix==8.7.0
+yt_dlp==2024.12.23
 moviepy==1.0.3
 pyflp==2.2.1
 demucs==4.0.1

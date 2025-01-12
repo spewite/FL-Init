@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-from pytubefix import YouTube
+import yt_dlp
 from moviepy.editor import AudioFileClip
 import moviepy.config as mp_config
 import urllib.parse
@@ -46,17 +46,38 @@ def download_video():
     try:
         sacar_mensaje("Empezando la descarga del audio...")
 
-        yt = YouTube(url)
-        title = yt.title
-        title = ''.join(char for char in title if char.isalnum() or char in " -_")
+         # Configurar opciones de yt_dlp
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(project_path, 'assets', '%(title)s.%(ext)s'),
+            'noplaylist': True,
+            'quiet': True,
+            'no_warnings': True,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp4',
+                'preferredquality': '192',
+            }],
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            title = info_dict.get('title', 'downloaded_audio')
+            title = ''.join(char for char in title if char.isalnum() or char in " -_")
 
         # Crear las carpetas de los proyectos
         assets_path = os.path.join(project_path, 'assets')
         os.makedirs(assets_path, exist_ok=True)
 
-        # Guardar rutas y objeto de descarga
-        audio_stream = yt.streams.filter(only_audio=True).first()
-        audio_file_path = audio_stream.download(output_path=assets_path, filename=f"{title}.mp4")
+        # Encontrar el archivo descargado
+        downloaded_files = os.listdir(assets_path)
+        audio_file = next((f for f in downloaded_files if f.startswith(title) and f.endswith('.mp4')), None)
+
+        if not audio_file:
+            raise FileNotFoundError("No se encontró el archivo de audio descargado.")
+
+        audio_file_path = os.path.join(assets_path, audio_file)
+
         mp3_path = os.path.join(assets_path, f'{title}.mp3')
 
         # Redirigir la salida de MoviePy a stdout
@@ -66,7 +87,6 @@ def download_video():
 
         # Descargar el audio
         audio_clip = AudioFileClip(audio_file_path)
-
         audio_clip.write_audiofile(mp3_path)
         audio_clip.close()
 
