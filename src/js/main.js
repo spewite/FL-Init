@@ -80,7 +80,9 @@ if (!fs.existsSync(SCRIPTS_PATH)) {
 /// -----------  ARCHIVOS -----------  ///
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
-const SCRIPT_PYTHON_PATH = path.join(SCRIPTS_PATH, 'script_python.py');
+const SCRIPT_PYTHON_PATH = process.env.NODE_ENV === 'development'
+  ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
+  : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
 
 // CONFIG
 if (!fs.existsSync(CONFIG_PATH)) {
@@ -340,7 +342,7 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 /// ------------------------------------  ///
 
 ipcMain.on('run-python-script', (event, input) => {
-  // const scriptPath = 'src/scripts/script_python.py';
+  
   const scriptPath = SCRIPT_PYTHON_PATH;
   const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
 
