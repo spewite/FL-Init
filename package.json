@@ -4,12 +4,11 @@
   "description": "FL INIT es una aplicación diseñado para simplificar la creación de proyectos en FL Studio utilizando canciones de YouTube. Esta aplicación automatiza la descarga de audio y facilita la configuración inicial de proyectos en FL Studio. Los usuarios pueden seleccionar una plantilla .flp específica para cada proyecto y, opcionalmente, extraer los stems de las canciones.",
   "main": "src/js/main.js",
   "scripts": {
-    "build": "webpack --mode production",
-    "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --publish=never",
-    "postinstall": "python -m venv venv && ./venv/Scripts/activate && pip install -r requirements.txt",
-    "publish": "node load-env.js"
+    "build": "cross-env NODE_ENV=production webpack --mode production",
+    "start": "cross-env NODE_ENV=development electron .",
+    "pack": "cross-env NODE_ENV=production electron-builder --dir",
+    "dist": "cross-env NODE_ENV=production electron-builder --publish=never",
+    "publish": "cross-env NODE_ENV=production node load-env.js"
   },
   "keywords": [],
   "author": "izeta",
