@@ -180,6 +180,10 @@ autoUpdater.on('update-available', () => {
 });
 
 autoUpdater.on('update-downloaded', (info) => {
+
+  // Forzar actualización de scripts
+  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+
   dialog.showMessageBox({
     type: 'info',
     title: 'Actualización lista',
