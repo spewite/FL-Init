@@ -43,7 +43,21 @@ function installFFmpeg() {
   console.log('FFmpegPath:', FFmpegPath);
 
   try {
+    // Verificar que la carpeta fuente existe
+    if (!fs.existsSync(ffmpegSource)) {
+      throw new Error(`El directorio fuente de FFmpeg no existe: ${ffmpegSource}`);
+    }
+    
     fs.mkdirSync(FFmpegPath, { recursive: true });
+
+    // Verificar que los archivos existen antes de copiarlos
+    const files = ['ffmpeg.exe', 'ffplay.exe', 'ffprobe.exe'];
+    for (const file of files) {
+      const sourcePath = path.join(ffmpegSource, file);
+      if (!fs.existsSync(sourcePath)) {
+        throw new Error(`El archivo FFmpeg ${file} no existe en la fuente: ${sourcePath}`);
+      }
+    }
 
     fs.copyFileSync(path.join(ffmpegSource, 'ffmpeg.exe'), FFmpegBinary);
     fs.copyFileSync(path.join(ffmpegSource, 'ffplay.exe'), path.join(FFmpegPath, 'ffplay.exe'));
@@ -52,6 +66,7 @@ function installFFmpeg() {
     console.log('FFmpeg instalado correctamente.');
   } catch (error) {
     console.error('Error al instalar FFmpeg:', error);
+    lanzar_error('Error al instalar FFmpeg:', error);
   }
 }
 
@@ -68,13 +83,16 @@ const SCRIPTS_PATH = path.join(app.getPath('userData'), 'scripts');
 // ASAR
 const ASAR_PATH = app.getAppPath();
 
-if (!fs.existsSync(ASSETS_PATH)) {
-  fs.mkdirSync(ASSETS_PATH);
-}
-
-// Crear el directorio assets si no existe
-if (!fs.existsSync(SCRIPTS_PATH)) {
-  fs.mkdirSync(SCRIPTS_PATH);
+try {
+  if (!fs.existsSync(ASSETS_PATH)) {
+    fs.mkdirSync(ASSETS_PATH);
+  }
+  if (!fs.existsSync(SCRIPTS_PATH)) {
+    fs.mkdirSync(SCRIPTS_PATH);
+  }
+} catch (error) {
+  console.error('Error creando directorios:', error);
+  lanzar_error(error);
 }
 
 /// -----------  ARCHIVOS -----------  ///
@@ -84,14 +102,16 @@ const SCRIPT_PYTHON_PATH = process.env.NODE_ENV === 'development'
   ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
   : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
 
-// CONFIG
-if (!fs.existsSync(CONFIG_PATH)) {
-  fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
-}
-
-// PYTHON SCRIPT
-if (!fs.existsSync(SCRIPT_PYTHON_PATH)) {
-  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+try {
+  if (!fs.existsSync(CONFIG_PATH)) {
+    fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
+  }
+  if (!fs.existsSync(SCRIPT_PYTHON_PATH)) {
+    fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+  }
+} catch (error) {
+  console.error('Error copiando archivos:', error);
+  lanzar_error(error);
 }
 
 /// ------------------------------------  ///
@@ -256,6 +276,11 @@ async function obtener_configuracion() {
 }
 
 function cambiar_config() {
+  if (!win) {
+    console.error('La ventana no está inicializada');
+    return;
+  }
+  
   obtener_configuracion()
     .then(JSON_Config => {
       // Si todo ha salido bien, mostrar la modal con la configuración actual
@@ -404,6 +429,16 @@ ipcMain.on('run-python-script', (event, input) => {
 
     event.sender.send('python-script-salida', message);
   });
+
+  pythonProcess.on('error', (error) => {
+    const message = {
+      texto: `Error al ejecutar el script: ${error.message}`,
+      UUID: UUID,
+      status: ESTADOS_SALIDA.ERROR
+    };
+    event.sender.send('python-script-salida', message);
+  });
+
 });
 
 
