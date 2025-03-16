@@ -243,27 +243,10 @@ ipcMain.on('obtener-configuracion', (event, data) => {
 ///          CAMBIAR CONFIGURACION        /// 
 /// ------------------------------------  ///
 
-function obtener_configuracion() {
-  return new Promise((resolve, reject) => {
-    fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
-      if (err) {
-        reject('Error al leer el archivo de configuracion: ' + err);
-        return;
-      }
-
-      try {
-        const JSON_Config = JSON.parse(data);
-
-        if (!JSON_Config) {
-          throw new Error('La configuración es nula o indefinida');
-        }
-
-        resolve(JSON_Config);
-      } catch (parseErr) {
-        reject('Error al parsear el archivo de configuracion: ' + parseErr);
-      }
-    });
-  });
+// Usar fs.promises para consistencia
+async function obtener_configuracion() {
+  const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
+  return JSON.parse(data);
 }
 
 function cambiar_config() {
