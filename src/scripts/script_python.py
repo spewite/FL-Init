@@ -2,15 +2,20 @@ import os
 import sys
 import argparse
 
+import pyflp.pattern
+import pyflp.project
 from pytubefix import YouTube
 from moviepy.editor import AudioFileClip
-import moviepy.config as mp_config
 import urllib.parse
 
 import pyflp
 
 import demucs.separate
 import shlex
+
+# Song Key
+import librosa
+import numpy as np
 
 # Variables globales
 url = None
@@ -76,9 +81,13 @@ def download_video():
         # Borrar el .mp4
         os.remove(audio_file_path)
         
+        # Get the key of the song
+        key = detect_key(mp3_path)
+        bpm = get_song_bpm(mp3_path)
+
         # Crear la plantilla FLP
         if template_path:
-            create_flp()
+            create_flp(key, bpm)
 
         # Abrir la carpeta donde hemos metido todo
         open_folder(project_path)
@@ -92,7 +101,6 @@ def download_video():
 
     except Exception as e:
         sacar_mensaje(f"Error al descargar el audio: {str(e)}", error=True)
-
 
 # Añadir esta función que proporcionaste para separar los stems
 def separate_audio(assets_path, audio_path):
@@ -127,17 +135,33 @@ def validar_nombre_proyecto(name):
 
 
 # Crear el proyecto de FL Studio
-def create_flp():
+def create_flp(key, bpm):
     if template_path:
         if os.path.isfile(template_path) and template_path.endswith('.flp'):
 
             project = pyflp.parse(template_path)
+            project.comments = f"Original Song: {key} | {bpm}BPM"
             pyflp.save(project, os.path.join(project_path, f'{project_name}.flp'))
 
             sacar_mensaje(f"Usando plantilla válida desde {template_path} para crear el proyecto")
         else:
             raise ValueError(f"La plantilla proporcionada no es un archivo .flp válido: {template_path}")
 
+
+def get_song_bpm(file_path):
+    # Cargar el archivo de audio
+    y, sr = librosa.load(file_path)
+    
+    # Calcular la envolvente de onset (detección de inicios de notas/golpes)
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    
+    # Estimar el tempo (BPM)
+    tempo, _ = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
+    
+    # Usar np.round en lugar de round para valores NumPy
+    bpm = int(np.round(tempo, 0))
+    
+    return bpm
 
 def mostrar_parametros():
     sacar_mensaje(f'Url: {url} \n')
@@ -206,3 +230,57 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
+
+
+# ---- FUNCTIONS TO GET SONG KEY ---- # 
+
+# Función para calcular la similitud del coseno
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+# Perfiles de Krumhansl-Kessler (valores empíricos)
+major_profile = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
+minor_profile = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
+
+# Notas musicales (do, do#, re, re#, mi, fa, fa#, sol, sol#, la, la#, si)
+notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+def rotate_profile(profile, n):
+    """Rota el perfil 'n' posiciones (para transponer la plantilla)"""
+    return np.roll(profile, n)
+
+def detect_key(audio_path):
+    # Cargar la canción
+    y, sr = librosa.load(audio_path)
+    
+    # Extraer el cromagrama con la transformada CQT
+    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
+    
+    # Promediar a lo largo del tiempo para obtener un vector representativo (12 valores)
+    chroma_mean = np.mean(chromagram, axis=1)
+    
+    best_score = -np.inf
+    best_key = None
+    best_mode = None
+
+    # Evaluar para cada tonalidad mayor
+    for i in range(12):
+        profile_rot = rotate_profile(major_profile, i)
+        score = cosine_similarity(chroma_mean, profile_rot)
+        if score > best_score:
+            best_score = score
+            best_key = notes[i]
+            best_mode = 'Major'
+
+    # Evaluar para cada tonalidad menor
+    for i in range(12):
+        profile_rot = rotate_profile(minor_profile, i)
+        score = cosine_similarity(chroma_mean, profile_rot)
+        if score > best_score:
+            best_score = score
+            best_key = notes[i]
+            best_mode = 'Minor'
+    
+    return f"{best_key} {best_mode} (Score: {round(best_score, 2)})"
+
+
