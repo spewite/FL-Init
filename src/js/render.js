@@ -59,21 +59,32 @@ ipcRenderer.invoke('get-app-version').then(version => {
 // ----- DOMContentLoaded ---- //
 document.addEventListener("DOMContentLoaded", (e) => {
 
+  // Cargar el parametro ruta de proyectos 
+  ipcRenderer.send("obtener-configuracion");
+
+});
+
+ipcRenderer.on('obtener-configuracion', (event, JSON_Config) => {
+  configurarParametros(JSON_Config)
+});
+
+function configurarParametros(JSON_Config) {
+
+  const {ruta_proyecto} = JSON_Config
+  
+  if (!ruta_proyecto) {
+    window.dialog.showModal();
+  } else {
+    inputProjectLocation.value = ruta_proyecto;
+  } 
+
   // Añadir un valor vacio al select
   insertar_option('');
   document.querySelector("#template-flp option").textContent = '(no template)'
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
-
-  // Cargar el parametro ruta de proyectos 
-  ipcRenderer.send("obtener-configuracion");
-
-  ipcRenderer.on('obtener-configuracion', (event, JSON_Config) => {
-    inputProjectLocation.value = JSON_Config['ruta_proyecto'];
-  });
-
-});
+}
 
 // ----- CERRAR MODAL ---- //
 btnCerrarModal.addEventListener("click", (e) => {
