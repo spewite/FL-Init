@@ -8,8 +8,6 @@ const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
-const quote = require('shell-quote').quote;
-const { exec } = require('child_process');
 const { spawn } = require('child_process');
 
 const { ESTADOS_SALIDA } = require('../js/constants');
@@ -65,7 +63,7 @@ function installFFmpeg() {
   try {
     // Verificar que la carpeta fuente existe
     if (!fs.existsSync(ffmpegSource)) {
-      throw new Error(`El directorio fuente de FFmpeg no existe: ${ffmpegSource}`);
+      throw new Error(`The FFmpeg source directory does not exist: ${ffmpegSource}`);
     }
     
     fs.mkdirSync(FFmpegPath, { recursive: true });
@@ -75,7 +73,7 @@ function installFFmpeg() {
     for (const file of files) {
       const sourcePath = path.join(ffmpegSource, file);
       if (!fs.existsSync(sourcePath)) {
-        throw new Error(`El archivo FFmpeg ${file} no existe en la fuente: ${sourcePath}`);
+        throw new Error(`The FFmpeg file ${file} does not exist in the source: ${sourcePath}`);
       }
     }
 
@@ -85,8 +83,8 @@ function installFFmpeg() {
 
     console.log('FFmpeg instalado correctamente.');
   } catch (error) {
-    console.error('Error al instalar FFmpeg:', error);
-    lanzar_error('Error al instalar FFmpeg:', error);
+    console.error('Error installing FFmpeg:', error);
+    lanzar_error('Error installing FFmpeg:', error);
   }
 }
 
@@ -231,9 +229,9 @@ function createWindow() {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Ajustes',
+      label: 'Settings',
       submenu: [
-        { label: 'Configuración', click() { cambiar_config(); } },
+        { label: 'Configuration', click() { cambiar_config(); } },
       ]
     },
     {
@@ -287,8 +285,8 @@ app.on('ready', () => {
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
     type: 'info',
-    title: 'Actualización disponible',
-    message: 'Hay una nueva versión disponible. Se está descargando... (Puedes cerrar el mensaje)',
+    title: 'Update available',
+    message: "A new version is available. It's downloading... (You can close the message)",
   });
   autoUpdater.downloadUpdate();
 });
@@ -300,16 +298,16 @@ autoUpdater.on('update-downloaded', (info) => {
 
   dialog.showMessageBox({
     type: 'info',
-    title: 'Actualización lista',
-    message: 'Una nueva versión ha sido descargada. La aplicación se reiniciará para aplicar la actualización.',
+    title: 'Update ready',
+    message: 'A new version has been downloaded. The app will restart to apply the update.',
   }).then(() => {
     autoUpdater.quitAndInstall();
   });
 });
 
 autoUpdater.on('error', (error) => {
-  log.error('Error en el auto-updater:', error);
-  lanzar_error('Error en el auto-updater:', error);
+  log.error('Error in the auto-updater:', error);
+  lanzar_error('Error in the auto-updater:', error);
 });
 
 // Enviar la versión de la aplicación cuando el renderizador lo solicite
@@ -329,7 +327,7 @@ ipcMain.on('validate-directory', (event, ruta) => {
 
     if (err || !stats.isDirectory()) {
       response.success = false;
-      response.errorMessage = `<p>❌ La ruta base <span style="font-weight: bold; font-style: italic;">${ruta}</span> no existe!</p>`;
+      response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${ruta}</span> does not exist!</p>`;
     }
     
     event.reply('validate-directory', response);
@@ -350,7 +348,7 @@ ipcMain.on('validate-project-name', (event, data) => {
 
     if (!err) {
       response.success = false;
-      response.errorMessage = `<p>❌ El directorio <span style="font-weight: bold; font-style: italic;">${rutaParaValidar}</span> ya existe!</p>`;
+      response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${rutaParaValidar}</span> already exists!</p>`;
     }
 
     event.reply('validate-project-name', response);
@@ -408,7 +406,7 @@ ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
   fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
 
     if (err) {
-      lanzar_error('Error al leer el archivo de configuracion: ' + err);
+      lanzar_error('Error reading configuration file: ' + err);
       return;
     }
   
@@ -421,7 +419,7 @@ ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
       event.sender.send('configuracion-guardada', { jsonConfig: jsonConfig });
 
     } catch (fileSaveError) {
-      lanzar_error('Error al guardar el nuevo JSON de configuración: ' + fileSaveError);
+      lanzar_error('Error saving new configuration JSON: ' + fileSaveError);
     }
   });
 
@@ -460,7 +458,7 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
   dialog.showOpenDialog({
     properties: ['openFile'],
-    filters: [{ name: 'Plantilla .flp', extensions: extensionsArray }]
+    filters: [{ name: '.flp file', extensions: extensionsArray }]
   }).then(result => {
     if (!result.canceled && result.filePaths.length > 0) {
       console.log(result)
@@ -549,10 +547,10 @@ ipcMain.on('run-python-script', (event, input) => {
     }
 
     if (code === 0) {
-      message.texto = "Script terminado con éxito"
+      message.texto = "Script completed successfully"
       message.status = ESTADOS_SALIDA.SUCCESS
     } else {
-      message.texto = `Script terminado con código de error: ${code}`
+      message.texto = `Script terminated with error code: ${code}`
       message.status = ESTADOS_SALIDA.ERROR
     }
 
@@ -561,7 +559,7 @@ ipcMain.on('run-python-script', (event, input) => {
 
   pythonProcess.on('error', (error) => {
     const message = {
-      texto: `Error al ejecutar el script: ${error.message}`,
+      texto: `Error executing script: ${error.message}`,
       UUID: UUID,
       status: ESTADOS_SALIDA.ERROR
     };
