@@ -176,6 +176,7 @@ function crearTrayIcon() {
 
 function createWindow() {
   win = new BrowserWindow({
+    icon: path.join(__dirname, '../../icons/icon.png'),
     width: 1100,
     height: 700,
     webPreferences: {
