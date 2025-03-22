@@ -24,6 +24,7 @@ project_name = None
 separate_stems = None
 template_path = None
 project_path = None
+youtube_title = None
 
 original_stderr = None
 
@@ -90,6 +91,8 @@ def download_video():
         yt = YouTube(url)
         title = yt.title
         title = ''.join(char for char in title if char.isalnum() or char in " -_")
+        global youtube_title
+        youtube_title = title 
 
         # Crear las carpetas de los proyectos
         assets_path = os.path.join(project_path, 'assets')
@@ -145,7 +148,8 @@ def create_info_file(key, bpm):
     
     try:
         with open(os.path.join(project_path, "Original Song Info.txt"), "w") as file:
-            file.write("Original Song Info: ")
+            file.write(f"Youtube title: {youtube_title}")
+            file.write("\nOriginal Song Info: ")
             file.write("\n  -> Key: " + key)
             file.write("\n  -> BPM: " + str(bpm))
     except Exception as err:
