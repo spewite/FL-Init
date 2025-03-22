@@ -155,8 +155,13 @@ function validateDirectory() {
 }
 
 function validateProjectName() {
+
   const ruta = inputProjectLocation.value;
   const directorio = inputProjectName.value;
+
+  if (!ruta || !directorio) {
+    return
+  }
   
   ipcRenderer.send("validate-project-name", {
     ruta: ruta,
