@@ -43,32 +43,32 @@
   <div class="container">
     <header>
       <span id="app-version"></span>
-      <img src="../../assets/logo.png" style="width: 170px; filter: drop-shadow(0 0 0.75rem orange);">
+      <img src="../../assets/logo.png" style="width: 170px; filter: drop-shadow(0 0 0.75rem orange); user-select:none;" draggable="false">
     </header>
     
     <form id="form">
       <div class="input-group" id="youtube-input-group">
-        <label for="youtube-url">URL de YouTube:</label>
-        <input type="text" id="youtube-url" value="https://www.youtube.com/watch?v=E03oGHlkzBE" placeholder="Ingresa la URL de la canción"> <!-- value="https://www.youtube.com/watch?v=E03oGHlkzBE" -->
+        <label for="youtube-url">Youtube URL:</label>
+        <input type="text" id="youtube-url" value="https://www.youtube.com/watch?v=E03oGHlkzBE" placeholder="Enter the URL of the song"> <!-- value="https://www.youtube.com/watch?v=E03oGHlkzBE" -->
       </div>
       
       <div class="input-group" id="directory-input-group">
-        <label for="project-location">Ubicación del Proyecto:</label>
-        <input type="text" id="project-location" placeholder="Selecciona la ubicación del proyecto">
-        <button type="button" id="browse-location">Examinar</button>
+        <label for="project-location">Project Location:</label>
+        <input type="text" id="project-location" placeholder="Select the project location">
+        <button type="button" id="browse-location">Browse</button>
       </div>
       
       <div class="input-group" id="project-name-input-group">
-        <label for="project-name">Nombre del Proyecto:</label>
-        <input type="text" id="project-name" placeholder="Nombre del proyecto">
+        <label for="project-name">Project Name:</label>
+        <input type="text" id="project-name" placeholder="Project Name">
       </div>
       
       <div class="input-group">
-        <label for="template-flp">Plantilla FLP:</label>
+        <label for="template-flp">FLP Template:</label>
         <select id="template-flp">
           <!-- Opciones de plantillas se llenarán con JS -->
         </select>
-        <button type="button" id="browse-flp-template">Examinar</button>
+        <button type="button" id="browse-flp-template">Browse</button>
       </div>
       
       <div class="input-group checkbox-group">
@@ -76,17 +76,17 @@
           <input type="checkbox" id="separate-stems" name="separate-stems">
           <span class="slider"></span>
         </label>
-        <label for="separate-stems" style="cursor:pointer;">Separar stems</label>
+        <label for="separate-stems" style="cursor:pointer;">Separate stems</label>
 
       </div>
 
       <div class="input-group">
-        <input type="submit" id="submit-form" value="DESCARGAR" /> <!--disabled--> 
+        <input type="submit" id="submit-form" value="DOWNLOAD" /> <!--disabled--> 
       </div>
     </form>
     
     <div class="progress-div hide" style="transition: all .5s">
-      <h3>Progreso:</h3>
+      <h3>Progress:</h3>
       <div class="python-output-container" id="python-output-container"></div>
     </div>
   </div>

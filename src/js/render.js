@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
   // Añadir un valor vacio al select
   insertar_option('');
-  document.querySelector("#template-flp option").textContent = '(sin plantilla)'
+  document.querySelector("#template-flp option").textContent = '(no template)'
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
@@ -119,7 +119,7 @@ inputYoutubeUrl.addEventListener("change", () => {
   if (!urlEsValida && !warning_p)
   {
     const warning_p = document.createElement("p");
-    warning_p.textContent = "⚠️ La URL no parece ser de Youtube!"
+    warning_p.textContent = "⚠️ The URL doesn't seem to be from Youtube!"
     warning_p.setAttribute("class", "warning slide-fade-in");
 
     youtubeInputGroup.append(warning_p);
@@ -213,13 +213,13 @@ document.getElementById('form').addEventListener('submit', function(event) {
   // Validacion de campos
   if (!youtubeUrl.trim() || !projectLocation.trim()  || !projectName.trim() )
   {
-    let camposSinRellenar = "Los siguientes campos son obligatorios: ";
+    let camposSinRellenar = "The following fields are required: ";
 
-    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} <br /> - URL de Youtube ` : camposSinRellenar;
-    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} <br /> - Ubicación del proyecto ` : camposSinRellenar;
-    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} <br /> - Nombre del proyecto ` : camposSinRellenar;
+    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} <br /> - Youtube URL ` : camposSinRellenar;
+    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} <br /> - Project Location ` : camposSinRellenar;
+    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} <br /> - Project Name ` : camposSinRellenar;
 
-    lanzar_error('Error de validación', camposSinRellenar);
+    lanzar_error('Validation Error', camposSinRellenar);
     return;
   }
   
