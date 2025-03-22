@@ -88,6 +88,49 @@ function installFFmpeg() {
   }
 }
 
+
+/// ----------------------  ///
+///          VENV           /// 
+/// ----------------------  ///
+
+const venvPath = process.env.NODE_ENV === 'development'
+? path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe') // Dev path
+: path.join(app.getPath('userData'), 'venv', 'Scripts', 'python.exe'); // Production path
+
+function checkPythonVenv() {
+  if (process.env.NODE_ENV === 'production') {
+    const venvTarget = path.join(app.getPath('userData'), 'venv');
+    const pythonExecutable = path.join(venvTarget, 'Scripts', 'python.exe');
+
+    if (!fs.existsSync(pythonExecutable)) {
+      console.log('Copying Python virtual environment for production...');
+      try {
+        fs.mkdirSync(venvTarget, { recursive: true });
+        const venvSource = path.join(app.getAppPath(), 'venv');
+        copyFolderRecursiveSync(venvSource, venvTarget);
+      } catch (error) {
+        lanzar_error('Failed to copy Python environment:', error);
+      }
+    }
+  }
+}
+
+// Add this helper function
+function copyFolderRecursiveSync(source, target) {
+  if (!fs.existsSync(target)) fs.mkdirSync(target);
+  
+  fs.readdirSync(source).forEach(item => {
+    const srcPath = path.join(source, item);
+    const tgtPath = path.join(target, item);
+    
+    if (fs.lstatSync(srcPath).isDirectory()) {
+      copyFolderRecursiveSync(srcPath, tgtPath);
+    } else {
+      fs.copyFileSync(srcPath, tgtPath);
+    }
+  });
+}
+
 /// ------------------------------------  ///
 ///       GUARDAR ARCHIVOS EN APPDATA     /// 
 /// ------------------------------------  ///
@@ -120,10 +163,12 @@ try {
 /// -----------  ARCHIVOS -----------  ///
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
-const SCRIPT_PYTHON_PATH = process.env.NODE_ENV === 'development'
+
+const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
   ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
   : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
-const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
+
+  const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
 ? path.join(app.getAppPath(), 'icons', 'icon.png') // Ruta para desarrollo
 : path.join(ICONS_PATH, 'icon.png'); // Ruta para producción
 
@@ -131,8 +176,8 @@ try {
   if (!fs.existsSync(CONFIG_PATH)) {
     fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
   }
-  if (!fs.existsSync(SCRIPT_PYTHON_PATH)) {
-    fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+  if (!fs.existsSync(PYTHON_SCRIPT_PATH)) {
+    fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
   }
   if (!fs.existsSync(PNG_ICON_PATH)) {
     fs.copyFileSync(path.join(ASAR_PATH, 'icons', 'icon.png'), PNG_ICON_PATH);
@@ -265,6 +310,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   checkFFmpeg();
+  checkPythonVenv();
   createWindow();
 
   app.on('activate', () => {
@@ -305,7 +351,7 @@ autoUpdater.on('update-available', () => {
 autoUpdater.on('update-downloaded', (info) => {
 
   // Forzar actualización de scripts
-  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
+  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
 
   dialog.showMessageBox({
     type: 'info',
@@ -489,11 +535,8 @@ ipcMain.on('run-python-script', (event, input) => {
   
   isProcessRunning = true;
 
-  const scriptPath = SCRIPT_PYTHON_PATH;
-  const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
-
   const {args, UUID} = input;
-  pythonProcess = spawn(venvPath, [scriptPath, ...args]);
+  pythonProcess = spawn(venvPath, [PYTHON_SCRIPT_PATH, ...args]);
 
   // Función segura para enviar mensajes
   const safeSend = (message) => {

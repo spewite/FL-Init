@@ -1,2 +1,1 @@
-- No se ejecuta el script de python
 - Poner plantilla vacia default
