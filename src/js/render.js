@@ -32,7 +32,6 @@ const inputSeparateStems = document.getElementById('separate-stems');
 const inputTemplatePath = document.getElementById('template-flp');
 
 // -----  MODAL ---- //
-const dialog = document.getElementById("dialog");
 const btnModalGuardar = document.getElementById("modal-guardar");
 const btnCerrarModal = document.getElementById("cerrar-modal");
 const inputProyectoConfig = document.getElementById("dialog-input-proyecto"); 
@@ -299,6 +298,7 @@ document.getElementById('form').addEventListener('submit', function(event) {
   });
 
   progressDialogContainer.appendChild(dialog);
+  insertarPythonOutput("Loading script...", UUID, "#747474")
   dialog.showModal();
 
 });
@@ -387,7 +387,7 @@ ipcRenderer.on('mostrar-modal', (event, valoresConfiguracionActual) => {
 ipcRenderer.on('configuracion-guardada', (event, config) => {
   
   Swal.fire({
-    text: "La configuración se ha guardado con éxito!",
+    text: "The settings have been saved successfully!",
     icon: "success",
     ...darkThemeOptions
   });
