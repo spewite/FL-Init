@@ -261,7 +261,7 @@ document.getElementById('form').addEventListener('submit', function(event) {
   
   // Añadir el texto
   const p_salida = document.createElement("p");
-  const textNode = document.createTextNode(`➜ ${projectName}`);
+  const textNode = document.createTextNode(projectName);
   p_salida.append(textNode);
   p_salida.setAttribute("data-dialog", UUID);
   pythonOutputContainer.appendChild(p_salida);
