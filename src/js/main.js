@@ -321,23 +321,41 @@ ipcMain.handle('get-app-version', async () => {
 ///              VALIDACIONES             /// 
 /// ------------------------------------  ///
 
-ipcMain.on('existe-directorio', (event, data) => {
+ipcMain.on('validate-directory', (event, ruta) => {
 
-  const {ruta} = data;
-  const {directorio} = data;
+  fs.stat(ruta, (err, stats) => {
 
-  const rutaParaValidar = path.join(ruta, directorio)
+    const response = { success: true, errorMessage: '' };
 
-  // Verificar si la ruta existe y retornar el resultado.
+    if (err || !stats.isDirectory()) {
+      response.success = false;
+      response.errorMessage = `<p>❌ La ruta base <span style="font-weight: bold; font-style: italic;">${ruta}</span> no existe!</p>`;
+    }
+    
+    event.reply('validate-directory', response);
+
+  });
+  
+});
+
+
+ipcMain.on('validate-project-name', (event, data) => {
+
+  const { ruta, directorio } = data;
+  const rutaParaValidar = path.join(ruta, directorio);
+  
   fs.access(rutaParaValidar, fs.constants.F_OK, (err) => {
+    
+    const response = { success: true, errorMessage: '' };
 
-    const responseData = {
-      existeDirectorio: !err,
-      path: rutaParaValidar
+    if (!err) {
+      response.success = false;
+      response.errorMessage = `<p>❌ El directorio <span style="font-weight: bold; font-style: italic;">${rutaParaValidar}</span> ya existe!</p>`;
     }
 
-    event.sender.send('existe-directorio-retorno', responseData);
+    event.reply('validate-project-name', response);
   });
+
 });
 
 /// ------------------------------------  ///

@@ -43,6 +43,7 @@ const browseInputArrayConfig = document.querySelectorAll("button[data-browse-con
 const progressDialogContainer = document.getElementById("progress-dialog-container");
 const youtubeInputGroup = document.getElementById("youtube-input-group");
 const projectNameInputGroup = document.getElementById("project-name-input-group");
+const directoryInputGroup = document.getElementById("directory-input-group");
 
 /// ------------------------------------  ///
 ///           PONER LA VERSION            /// 
@@ -127,56 +128,63 @@ inputYoutubeUrl.addEventListener("change", () => {
 })
 
 // ----- VALIDACION NOMBRE DE PROYECTO VÁLIDO ---- //
-inputProjectName.addEventListener("change", () => {
-  validarRutaProyectoValido();
-});
 
 inputProjectLocation.addEventListener("change", () => {
-  validarRutaProyectoValido();
+  validateProjectName();
+  validateDirectory();
 });
 
-function validarRutaProyectoValido()
-{
-  const ruta = inputProjectLocation.value;
-  const directorio = inputProjectName.value;
+inputProjectName.addEventListener("change", () => {
+  validateProjectName();
+  validateDirectory();
+});
 
-  // Si alguno de los dos inputs está vacio se quita el mensaje de error si estuviese y se sale de la funcion.
-  if (!ruta.trim() || !directorio.trim())
-  {
-    eliminarErrorNombreProyecto();
-    return
-  }
-
-  const data = {
-    ruta: ruta,
-    directorio: directorio
-  }
-
-  ipcRenderer.send("existe-directorio", data);
+function validateDirectory() {
+  const directorio = inputProjectLocation.value;
+  ipcRenderer.send("validate-directory", directorio);
 }
 
-ipcRenderer.on('existe-directorio-retorno', (event, data) => {
+function validateProjectName() {
+  const ruta = inputProjectLocation.value;
+  const directorio = inputProjectName.value;
+  
+  ipcRenderer.send("validate-project-name", {
+    ruta: ruta,
+    directorio: directorio
+  });
+}
 
-  const {existeDirectorio} = data;
-  const {path} = data;
-
-  if (existeDirectorio)
-  {
-    // Si el directorio existe mostrar el mensaje de error
-    const error_p = document.createElement("p");
-    error_p.innerHTML = `<p>❌ El directorio <span style="font-weight: bold; font-style: italic;">${path}</span> ya existe!<p>`
-    error_p.setAttribute("class", "error slide-fade-in");
-
-    projectNameInputGroup.append(error_p);
-  } else 
-  {
-    eliminarErrorNombreProyecto();
+ipcRenderer.on('validate-directory', (event, response) => {
+  const parent = directoryInputGroup;
+  if (!response.success) {
+    displayError(response.errorMessage, parent);
+  } else {
+    removeError(parent);
   }
 });
 
-function eliminarErrorNombreProyecto()
+ipcRenderer.on('validate-project-name', (event, response) => {
+  const parent = projectNameInputGroup;
+  if (!response.success) {
+    displayError(response.errorMessage, parent);
+  } else {
+    removeError(parent);
+  }
+});
+
+// Auxiliar funcion to show errors
+function displayError(mensaje, parent) {
+  removeError(parent);
+  
+  const error_p = document.createElement("p");
+  error_p.innerHTML = mensaje;
+  error_p.className = "error slide-fade-in";
+  parent.appendChild(error_p);
+}
+
+function removeError(parent)
 {
-  const error_p = projectNameInputGroup.querySelector(".error");
+  const error_p = parent.querySelector(".error");
 
   // Si el directorio no existe y se esta mostrando un mensaje de error, se quita.
   if (error_p)
