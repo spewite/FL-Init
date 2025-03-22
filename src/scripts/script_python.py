@@ -1,9 +1,7 @@
 import os
 import sys
-import argparse
+import argparse 
 
-import pyflp.pattern
-import pyflp.project
 from pytubefix import YouTube
 from moviepy.editor import AudioFileClip
 import urllib.parse
