@@ -44,6 +44,42 @@ def es_video_valido():
     return True
 
 
+
+def detect_key(audio_path):
+    # Cargar la canción
+    y, sr = librosa.load(audio_path)
+    
+    # Extraer el cromagrama con la transformada CQT
+    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
+    
+    # Promediar a lo largo del tiempo para obtener un vector representativo (12 valores)
+    chroma_mean = np.mean(chromagram, axis=1)
+    
+    best_score = -np.inf
+    best_key = None
+    best_mode = None
+
+    # Evaluar para cada tonalidad mayor
+    for i in range(12):
+        profile_rot = rotate_profile(major_profile, i)
+        score = cosine_similarity(chroma_mean, profile_rot)
+        if score > best_score:
+            best_score = score
+            best_key = notes[i]
+            best_mode = 'Major'
+
+    # Evaluar para cada tonalidad menor
+    for i in range(12):
+        profile_rot = rotate_profile(minor_profile, i)
+        score = cosine_similarity(chroma_mean, profile_rot)
+        if score > best_score:
+            best_score = score
+            best_key = notes[i]
+            best_mode = 'Minor'
+    
+    return f"{best_key} {best_mode} (Score: {round(best_score, 2)})"
+
+
 # Función para descargar solo audio y convertirlo a MP3
 # Modificar la función de descarga para incluir la separación de stems
 def download_video():
@@ -81,9 +117,12 @@ def download_video():
         # Borrar el .mp4
         os.remove(audio_file_path)
         
-        # Get the key of the song
+        # Get key and bpm of the song
         key = detect_key(mp3_path)
         bpm = get_song_bpm(mp3_path)
+
+        # Create file with original song info
+        create_info_file(key, bpm)
 
         # Crear la plantilla FLP
         if template_path:
@@ -102,23 +141,62 @@ def download_video():
     except Exception as e:
         sacar_mensaje(f"Error al descargar el audio: {str(e)}", error=True)
 
-# Añadir esta función que proporcionaste para separar los stems
+def create_info_file(key, bpm):
+    
+    try:
+        with open(os.path.join(project_path, "Original Song Info.txt"), "w") as file:
+            file.write("Original Song Info: ")
+            file.write("\n  -> Key: " + key)
+            file.write("\n  -> BPM: " + str(bpm))
+    except Exception as err:
+        sacar_mensaje(f"Error creating the original song info file: {err}")
+        
+
 def separate_audio(assets_path, audio_path):
+    # Definir la ruta base donde queremos que queden los stems
+    stems_base = os.path.join(assets_path, "stems")
+    os.makedirs(stems_base, exist_ok=True)
 
-    os.makedirs(assets_path, exist_ok=True) # A priori debería de existir siempre
-
-    # Aquí se define el modelo, el input y la salida.
-    command = f'--mp3 -n mdx_extra --out "{assets_path}" "{audio_path}"'
+    # Ejecutar demucs con la ruta de salida en stems_base.
+    # Esto generará una estructura: stems_base/mdx_extra/nombre_del_audio/(los 4 archivos)
+    command = f'--mp3 -n mdx_extra --out "{stems_base}" "{audio_path}"'
     args = shlex.split(command)
 
-    # Proceder a la separación de los stems.
     sacar_mensaje("Extracción de stems en progreso...")
     sys.stderr = sys.stdout
     demucs.separate.main(args)
     sys.stderr = original_stderr
-    sacar_mensaje(f"La separación ha terminado. Los stems se han guardado en: {assets_path}")
+    sacar_mensaje("La separación ha terminado. Moviendo los archivos a la carpeta stems...")
 
-    open_folder(assets_path)
+    # Mover los archivos desde la estructura generada por demucs a la carpeta stems_base.
+    move_stems_up(stems_base)
+
+    sacar_mensaje(f"Los stems se han movido a: {stems_base}")
+    open_folder(stems_base)
+
+def move_stems_up(stems_base):
+    """
+    Busca la carpeta mdx_extra dentro de stems_base y mueve los archivos
+    de la subcarpeta (que corresponde al nombre del audio) a stems_base.
+    """
+    mdx_extra_dir = os.path.join(stems_base, "mdx_extra")
+    if not os.path.exists(mdx_extra_dir):
+        sacar_mensaje("No se encontró la carpeta 'mdx_extra'. Verifica la salida de demucs.")
+        return
+
+    # Recorrer cada carpeta dentro de mdx_extra (normalmente solo habrá una)
+    for subfolder in os.listdir(mdx_extra_dir):
+        subfolder_path = os.path.join(mdx_extra_dir, subfolder)
+        if os.path.isdir(subfolder_path):
+            for filename in os.listdir(subfolder_path):
+                src_file = os.path.join(subfolder_path, filename)
+                dest_file = os.path.join(stems_base, filename)
+                # Mover el archivo a la carpeta stems_base
+                os.rename(src_file, dest_file)
+            # Una vez movidos los archivos, eliminar la carpeta vacía
+            os.rmdir(subfolder_path)
+    # Eliminar la carpeta mdx_extra si ya está vacía
+    os.rmdir(mdx_extra_dir)
 
 # Función para abrir el directorio en el explorador de archivos
 def open_folder(path):
@@ -219,19 +297,6 @@ def main(args):
 
     return 1
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script para descargar y procesar videos de YouTube")
-    parser.add_argument("project_location", help="Ruta del directorio de destino")
-    parser.add_argument("url", help="URL del video de YouTube")
-    parser.add_argument("project_name", help="Nombre del proyecto, usado como nombre del directorio")
-    parser.add_argument("--separate-stems", action='store_true', help="Indica si se deben separar los stems del audio")
-    parser.add_argument("--template-path", help="Ruta de la plantilla .flp a usar para el proyecto")
-
-    args = parser.parse_args()
-    main(args)
-
-
 # ---- FUNCTIONS TO GET SONG KEY ---- # 
 
 # Función para calcular la similitud del coseno
@@ -249,38 +314,15 @@ def rotate_profile(profile, n):
     """Rota el perfil 'n' posiciones (para transponer la plantilla)"""
     return np.roll(profile, n)
 
-def detect_key(audio_path):
-    # Cargar la canción
-    y, sr = librosa.load(audio_path)
-    
-    # Extraer el cromagrama con la transformada CQT
-    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
-    
-    # Promediar a lo largo del tiempo para obtener un vector representativo (12 valores)
-    chroma_mean = np.mean(chromagram, axis=1)
-    
-    best_score = -np.inf
-    best_key = None
-    best_mode = None
 
-    # Evaluar para cada tonalidad mayor
-    for i in range(12):
-        profile_rot = rotate_profile(major_profile, i)
-        score = cosine_similarity(chroma_mean, profile_rot)
-        if score > best_score:
-            best_score = score
-            best_key = notes[i]
-            best_mode = 'Major'
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Script para descargar y procesar videos de YouTube")
+    parser.add_argument("project_location", help="Ruta del directorio de destino")
+    parser.add_argument("url", help="URL del video de YouTube")
+    parser.add_argument("project_name", help="Nombre del proyecto, usado como nombre del directorio")
+    parser.add_argument("--separate-stems", action='store_true', help="Indica si se deben separar los stems del audio")
+    parser.add_argument("--template-path", help="Ruta de la plantilla .flp a usar para el proyecto")
 
-    # Evaluar para cada tonalidad menor
-    for i in range(12):
-        profile_rot = rotate_profile(minor_profile, i)
-        score = cosine_similarity(chroma_mean, profile_rot)
-        if score > best_score:
-            best_score = score
-            best_key = notes[i]
-            best_mode = 'Minor'
-    
-    return f"{best_key} {best_mode} (Score: {round(best_score, 2)})"
-
+    args = parser.parse_args()
+    main(args)
 
