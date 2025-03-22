@@ -1,4 +1,3 @@
 - Si la variable de la ruta del proyecto no esta definida al abrir la app mostrar la modal.
-- No se muestra el icono del taskbar
 - No se ejecuta el script de python
 - Poner plantilla vacia default
