@@ -97,6 +97,7 @@ function installFFmpeg() {
 // APPDATA
 const ASSETS_PATH = path.join(app.getPath('userData'), 'assets');
 const SCRIPTS_PATH = path.join(app.getPath('userData'), 'scripts');
+const ICONS_PATH = path.join(app.getPath('userData'), 'icons');
 
 // ASAR
 const ASAR_PATH = app.getAppPath();
@@ -107,6 +108,9 @@ try {
   }
   if (!fs.existsSync(SCRIPTS_PATH)) {
     fs.mkdirSync(SCRIPTS_PATH);
+  }
+  if (!fs.existsSync(ICONS_PATH)) {
+    fs.mkdirSync(ICONS_PATH);
   }
 } catch (error) {
   console.error('Error creando directorios:', error);
@@ -119,6 +123,9 @@ const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 const SCRIPT_PYTHON_PATH = process.env.NODE_ENV === 'development'
   ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
   : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
+const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
+? path.join(app.getAppPath(), 'icons', 'icon.png') // Ruta para desarrollo
+: path.join(ICONS_PATH, 'icon.png'); // Ruta para producción
 
 try {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -127,10 +134,14 @@ try {
   if (!fs.existsSync(SCRIPT_PYTHON_PATH)) {
     fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), SCRIPT_PYTHON_PATH);
   }
+  if (!fs.existsSync(PNG_ICON_PATH)) {
+    fs.copyFileSync(path.join(ASAR_PATH, 'icons', 'icon.png'), PNG_ICON_PATH);
+  }
 } catch (error) {
   console.error('Error copiando archivos:', error);
   lanzar_error(error);
 }
+
 
 /// ------------------------------------  ///
 ///         CONFIGURACIÓN ELECTRON        /// 
@@ -139,7 +150,7 @@ try {
 // Función para crear el ícono en la bandeja
 function crearTrayIcon() {
   if (!tray) {
-    tray = new Tray(path.join(__dirname, '../../icons/icon.png'));
+    tray = new Tray(PNG_ICON_PATH);
     
     // Evento para clic izquierdo
     tray.on('click', () => {
@@ -174,7 +185,7 @@ function crearTrayIcon() {
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(__dirname, '../../icons/icon.png'),
+    icon: PNG_ICON_PATH,
     width: 1100,
     height: 700,
     webPreferences: {
