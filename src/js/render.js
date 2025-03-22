@@ -257,13 +257,14 @@ document.getElementById('form').addEventListener('submit', function(event) {
   // ---- INSERTAR TEXTO DEL LOG ---- //
 
   // Si el contenedor del log esta oculto se muestra.
-  pythonOutputContainer.parentNode.style.display = "block"
+  document.querySelector(".progress-div").classList.remove("hide")
   
   // Añadir el texto
   const p_salida = document.createElement("p");
   const textNode = document.createTextNode(projectName);
   p_salida.append(textNode);
   p_salida.setAttribute("data-dialog", UUID);
+  p_salida.classList.add("push-button-3d");
   pythonOutputContainer.appendChild(p_salida);
 
   // Añadir una clase para activar la animación
