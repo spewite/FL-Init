@@ -12,6 +12,7 @@ body
   height: 100vh;
   justify-content: center;
   background: #161616;
+  --primary: #007bffbf;
 }
 
 /*  ------------------------------------  ///
@@ -112,6 +113,7 @@ form {
   align-items: center;
   margin: 7px 0px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 input[type="text"], select {
@@ -137,7 +139,7 @@ button
 .input-group input[type=submit]:focus
 {
   outline: none;
-  box-shadow: 0px 0px 15px #007bffbf;
+  box-shadow: 0px 0px 15px var(--primary);
 }
 
 .input-group input:focus,
@@ -149,14 +151,14 @@ select
 }
 
 button:hover, input[type=submit]:hover {
-  box-shadow: 0px 0px 15px #007bffbf;
+  box-shadow: 0px 0px 15px var(--primary);
 }
 
 button, input[type=submit] {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
-  background-color: #007BFF;
+  background-color: var(--primary);
   cursor: pointer;
   transition: .3s;
 }
@@ -174,6 +176,7 @@ input[type=submit]
 .checkbox-group {
   display: flex;
   align-items: center;
+  margin: 15px 0px;
 }
 
 .checkbox-group label {
@@ -334,7 +337,7 @@ dialog hr
 
 #progress-dialog-container dialog
 {
-  max-width: 650px;
+  width: 70vw;
   position: absolute;
   top: 20px;
   overflow: hidden;
@@ -368,4 +371,65 @@ dialog[data-uuid] .body {
   overflow-x: hidden;
   word-break: break-all;
   font-size: 12px;
+}
+
+
+/*  -----------------------------------  ///
+///             TOGGLE SWITCH            /// 
+/// ----------------------------------   */
+
+.switch {
+  --secondary-container: #393f4b;
+  font-size: 17px;
+  position: relative;
+  display: inline-block;
+  width: 3.7em;
+  height: 1.8em;
+}
+
+.switch input {
+  display: none;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #313033;
+  transition: .2s;
+  border-radius: 30px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.4em;
+  width: 1.4em;
+  border-radius: 20px;
+  left: 0.2em;
+  bottom: 0.2em;
+  background-color: #aeaaae;
+  transition: .4s;
+}
+
+input:checked + .slider::before {
+  background-color: var(--primary);
+}
+
+input:checked + .slider {
+  background-color: var(--secondary-container);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--secondary-container);
+}
+
+input:checked + .slider:before {
+  transform: translateX(1.9em);
 }
