@@ -84,7 +84,7 @@ def detect_key(audio_path):
 def download_video():
     
     try:
-        sacar_mensaje("Empezando la descarga del audio...")
+        sacar_mensaje("Starting audio download...")
 
         yt = YouTube(url)
         title = yt.title
@@ -134,13 +134,14 @@ def download_video():
 
         # Verifica si el checkbox de separación de stems está marcado
         if separate_stems: 
-            sacar_mensaje("Se ha creado el proyecto. Se acaba de iniciar el proceso de extraer los stems. Para ver el progreso mira la terminal. Si quieres puedes crear otro proyecto miestras tanto (te va a ralentizar el otro).")
+            sacar_mensaje("\nThe project has been created. The stem extraction process has just begun. ")
+            sacar_mensaje("To see the progress, check the terminal. If you want, you can create another project in the meantime (it will slow down the previous one).")
             separate_audio(assets_path, mp3_path)
         else: 
-            sacar_mensaje("Se ha creado el proyecto. Si quieres puedes crear otro.")
+            sacar_mensaje("The project has been created. You can create another one if you wish.")
 
     except Exception as e:
-        sacar_mensaje(f"Error al descargar el audio: {str(e)}", error=True)
+        sacar_mensaje(f"Error downloading audio: {str(e)}", error=True)
 
 def create_info_file(key, bpm):
     
@@ -164,16 +165,16 @@ def separate_audio(assets_path, audio_path):
     command = f'--mp3 -n mdx_extra --out "{stems_base}" "{audio_path}"'
     args = shlex.split(command)
 
-    sacar_mensaje("Extracción de stems en progreso...")
+    sacar_mensaje("Stem extraction in progress...")
     sys.stderr = sys.stdout
     demucs.separate.main(args)
     sys.stderr = original_stderr
-    sacar_mensaje("La separación ha terminado. Moviendo los archivos a la carpeta stems...")
+    sacar_mensaje("The split is complete. Moving the files to the stems folder...")
 
     # Mover los archivos desde la estructura generada por demucs a la carpeta stems_base.
     move_stems_up(stems_base)
 
-    sacar_mensaje(f"Los stems se han movido a: {stems_base}")
+    sacar_mensaje(f"The stems have been moved to: {stems_base}")
     open_folder(stems_base)
 
 def move_stems_up(stems_base):
@@ -183,7 +184,7 @@ def move_stems_up(stems_base):
     """
     mdx_extra_dir = os.path.join(stems_base, "mdx_extra")
     if not os.path.exists(mdx_extra_dir):
-        sacar_mensaje("No se encontró la carpeta 'mdx_extra'. Verifica la salida de demucs.")
+        sacar_mensaje("The 'mdx_extra' folder was not found. Contact with creator please.")
         return
 
     # Recorrer cada carpeta dentro de mdx_extra (normalmente solo habrá una)
@@ -208,10 +209,10 @@ def validar_nombre_proyecto(name):
     # Caracteres no permitidos en Windows para nombres de carpetas y archivos en windows.
     invalid_chars = '<>:"/\\|?*'
     if any(char in invalid_chars for char in name):
-        raise ValueError("El nombre del proyecto contiene caracteres no permitidos por Windows.\n Los caracteres no permitidos son: <>:\"/\\|?*")
+        raise ValueError("The project name contains characters not allowed by Windows.\n The allowed characters are: <>:\"/\\|?*")
         
     if name.endswith('.') or name.endswith(' '):
-        raise ValueError("Nombre del Proyecto Inválido", "El nombre del proyecto no puede terminar con un punto o un espacio.")
+        raise ValueError("Invalid project name", "The project name cannot end with a period or a space.")
 
 
 # Crear el proyecto de FL Studio
@@ -223,9 +224,9 @@ def create_flp(key, bpm):
             project.comments = f"Original Song: {key} | {bpm}BPM"
             pyflp.save(project, os.path.join(project_path, f'{project_name}.flp'))
 
-            sacar_mensaje(f"Usando plantilla válida desde {template_path} para crear el proyecto")
+            sacar_mensaje(f"Using valid template from {template_path} to create the project")
         else:
-            raise ValueError(f"La plantilla proporcionada no es un archivo .flp válido: {template_path}")
+            raise ValueError(f"The provided template is not a valid .flp file: {template_path}")
 
 
 def get_song_bpm(file_path):
@@ -259,7 +260,7 @@ def main(args):
 
     # Validar que se han introducido todos los campos obligatorios.
     if not args.url or not args.project_location or not args.project_name:
-        raise ValueError("Inserte los campos obligatorios")
+        raise ValueError("Fill the required fields, please.")
 
     # Poner los parametros en variables globales.
     global url
@@ -287,15 +288,15 @@ def main(args):
 
         # Verificar si el directorio de destino ya existe (No puede existir)
         if os.path.exists(project_path):
-            raise FileExistsError(f"El directorio de destino '{project_path}' ya existe. Por favor, elige un nombre de proyecto diferente o cambia la ubicación del proyecto.")
+            raise FileExistsError(f"The destination directory '{project_path}' already exists. Please choose a different project name or change the project location.")
         
     # --  Empezar con el proceso de descarga -- #
         download_video()
     except ValueError as ve:
-        sacar_mensaje(f"Error de validacion: {str(ve)}", error=True)
+        sacar_mensaje(f"Validation error: {str(ve)}", error=True)
 
     except Exception as e:
-        sacar_mensaje(f"Error durante la descarga o procesamiento del video: {str(e)}", error=True)
+        sacar_mensaje(f"Error during download or processing of video: {str(e)}", error=True)
 
     return 1
 
