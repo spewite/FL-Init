@@ -451,6 +451,7 @@ function insertarPythonOutput(mensaje, UUID, color)
   p.setAttribute("style", `color:${color};`) 
 
   div.appendChild(p);
+  div.scrollTop = div.scrollHeight
 }
 
 function cargar_plantillas()
