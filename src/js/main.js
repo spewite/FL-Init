@@ -3,7 +3,7 @@
 ///           VARIABLES GLOBALES          /// 
 /// ------------------------------------  ///
 
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, Tray } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
@@ -15,6 +15,26 @@ const { spawn } = require('child_process');
 const { ESTADOS_SALIDA } = require('../js/constants');
 
 let win;
+let tray = null; // Declaración global importante
+let isProcessRunning = false;
+let pythonProcess = null;
+
+/// -----------------  ///
+///      SAVE QUIT     /// 
+/// -----------------  ///
+
+app.on('before-quit', () => {
+  // Matar cualquier proceso residual
+  if (pythonProcess) {
+    pythonProcess.kill('SIGTERM');
+    pythonProcess = null;
+  }
+  
+  // Limpiar listeners
+  if (win && !win.isDestroyed()) {
+    win.removeAllListeners();
+  }
+});
 
 /// -------------------------------------  ///
 ///      INSTALAR FFMPEG SI NO LO ESTA     /// 
@@ -118,6 +138,42 @@ try {
 ///         CONFIGURACIÓN ELECTRON        /// 
 /// ------------------------------------  ///
 
+// Función para crear el ícono en la bandeja
+function crearTrayIcon() {
+  if (!tray) {
+    tray = new Tray(path.join(__dirname, '../../icons/icon.png'));
+    
+    // Evento para clic izquierdo
+    tray.on('click', () => {
+      if (win) {
+        win.show();
+        if (process.platform === 'darwin') app.dock.show();
+      }
+    });
+
+    // Menú contextual para clic derecho
+    const contextMenu = Menu.buildFromTemplate([
+      { 
+        label: 'Open', 
+        click: () => {
+          win.show();
+          if (process.platform === 'darwin') app.dock.show();
+        }
+      },
+      { 
+        label: 'Quit', 
+        click: () => {
+          app.isQuitting = true;
+          app.quit();
+        }
+      }
+    ]);
+    
+    tray.setToolTip('FL Init');
+    tray.setContextMenu(contextMenu);
+  }
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1100,
@@ -136,6 +192,41 @@ function createWindow() {
 
   // Abrir DevTools automáticamente
   // win.webContents.openDevTools();
+
+  // Modifica el evento close de la ventana
+  win.on('close', (event) => {
+    if (!app.isQuitting) {
+      if (isProcessRunning) {
+        // Mostrar diálogo solo si hay proceso activo
+        const choice = dialog.showMessageBoxSync(win, {
+          type: 'question',
+          buttons: ['Send to Background', 'Quit Anyway'],
+          title: 'Process Running',
+          message: 'The audio is being proccessed!',
+          detail: 'Closing the app will terminate the current operation.',
+          cancelId: 0
+        });
+  
+        if (choice === 1) { // Quit Anyway
+          app.isQuitting = true;
+          win.destroy();
+          app.quit();
+          return;
+        } else { // Send to Background
+          event.preventDefault();
+          win.hide();
+          crearTrayIcon();
+        }
+      } else {
+        // Regular close
+        app.isQuitting = true;
+        win.destroy();
+        app.quit();
+        return;
+      }
+    }
+  });
+  
 
   const menu = Menu.buildFromTemplate([
     {
@@ -368,13 +459,29 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
 ipcMain.on('run-python-script', (event, input) => {
   
+  isProcessRunning = true;
+
   const scriptPath = SCRIPT_PYTHON_PATH;
   const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe');  // For Windows
 
-  const {args} = input;
-  const {UUID} = input;
+  const {args, UUID} = input;
+  pythonProcess = spawn(venvPath, [scriptPath, ...args]);
 
-  const pythonProcess = spawn(venvPath, [scriptPath, ...args]);
+  // Función segura para enviar mensajes
+  const safeSend = (message) => {
+    if (!win.isDestroyed()) { // Verificar si la ventana existe
+      event.sender.send('python-script-salida', message);
+    }
+  };
+
+  // Limpieza mejorada
+  const cleanup = () => {
+    isProcessRunning = false;
+    if (pythonProcess) {
+      pythonProcess.removeAllListeners();
+      pythonProcess = null;
+    }
+  };
 
   pythonProcess.stdout.on('data', (data) => {
 
@@ -396,7 +503,7 @@ ipcMain.on('run-python-script', (event, input) => {
       message.status = ESTADOS_SALIDA.SUCCESS;
     }
 
-    event.sender.send('python-script-salida', message);
+    safeSend(message);
   });
 
   pythonProcess.stderr.on('data', (data) => {
@@ -407,11 +514,14 @@ ipcMain.on('run-python-script', (event, input) => {
       status: ESTADOS_SALIDA.ERROR
     }
 
-    event.sender.send('python-script-salida', message);
+    safeSend(message);
   });
 
   pythonProcess.on('close', (code) => {
+
     console.log(`Proceso terminado con código ${code}`);
+
+    cleanup();
 
     let message = {
       texto: undefined,
@@ -427,7 +537,7 @@ ipcMain.on('run-python-script', (event, input) => {
       message.status = ESTADOS_SALIDA.ERROR
     }
 
-    event.sender.send('python-script-salida', message);
+    safeSend(message);
   });
 
   pythonProcess.on('error', (error) => {
@@ -436,7 +546,7 @@ ipcMain.on('run-python-script', (event, input) => {
       UUID: UUID,
       status: ESTADOS_SALIDA.ERROR
     };
-    event.sender.send('python-script-salida', message);
+    safeSend(message);
   });
 
 });
