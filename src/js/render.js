@@ -241,7 +241,7 @@ document.getElementById('form').addEventListener('submit', function(event) {
   const error_p = projectNameInputGroup.querySelector(".error");
   if (error_p)
   {
-    lanzar_error('Error de validación', `${error_p.innerHTML} <br/> Cambia la ubicación del proyecto o eliga un nombre de proyecto único.`);
+    lanzar_error('Error de validación', `${error_p.innerHTML} <br/> Change the project location or choose a unique project name.`);
     return
   } 
 
