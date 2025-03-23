@@ -174,13 +174,14 @@ input[type=submit]
 }
 
 .checkbox-group {
+  justify-content: left;
   display: flex;
   align-items: center;
   margin: 15px 0px;
 }
 
 .checkbox-group label {
-  margin-left: 8px;
+  margin-right: 8px;
 }
 
 .progress-div {
