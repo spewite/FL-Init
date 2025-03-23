@@ -168,9 +168,13 @@ const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
   ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
   : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
 
-  const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
-? path.join(app.getAppPath(), 'icons', 'icon.png') // Ruta para desarrollo
-: path.join(ICONS_PATH, 'icon.png'); // Ruta para producción
+const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
+  ? path.join(app.getAppPath(), 'icons', 'icon.png') // Ruta para desarrollo
+  : path.join(ICONS_PATH, 'icon.png'); // Ruta para producción
+
+const EMPTY_FLP_PATH = process.env.NODE_ENV === 'development'
+  ? path.join(app.getAppPath(), 'src', 'templates', 'empty-template.flp') // Ruta desarrollo
+  : path.join(SCRIPTS_PATH, 'empty-template.flp'); // Ruta producción
 
 try {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -181,6 +185,12 @@ try {
   }
   if (!fs.existsSync(PNG_ICON_PATH)) {
     fs.copyFileSync(path.join(ASAR_PATH, 'icons', 'icon.png'), PNG_ICON_PATH);
+  }
+  if (!fs.existsSync(EMPTY_FLP_PATH)) {
+    fs.copyFileSync(
+      path.join(ASAR_PATH, 'src', 'templates', 'empty-template.flp'),
+      EMPTY_FLP_PATH
+    );
   }
 } catch (error) {
   console.error('Error copiando archivos:', error);
@@ -309,9 +319,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  createWindow();
   checkFFmpeg();
   checkPythonVenv();
-  createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -352,6 +362,11 @@ autoUpdater.on('update-downloaded', (info) => {
 
   // Forzar actualización de scripts
   fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
+
+  fs.copyFileSync(
+    path.join(ASAR_PATH, 'src', 'templates', 'empty-template.flp'),
+    EMPTY_FLP_PATH
+  );
 
   dialog.showMessageBox({
     type: 'info',
@@ -515,7 +530,7 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
   dialog.showOpenDialog({
     properties: ['openFile'],
-    filters: [{ name: '.flp file', extensions: extensionsArray }]
+    filters: [{ name: 'Template file', extensions: extensionsArray }]
   }).then(result => {
     if (!result.canceled && result.filePaths.length > 0) {
       console.log(result)
@@ -531,10 +546,27 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 ///             SCRIPTS PYTHON            ///
 /// ------------------------------------  ///
 
+function hasTemplatePath(args) {
+  return args.some(arg => arg.includes('--template-path'));
+}
+
+function copyEmtpyFLP(dest) {
+  try {
+    fs.copyFileSync(EMPTY_FLP_PATH, dest);
+  } catch (error) {
+    lanzar_error('Error copying empty template: ' + error.message);
+  }
+}
+
 ipcMain.on('run-python-script', (event, input) => {
   
   isProcessRunning = true;
 
+  // Args:
+  // 0: Project location
+  // 1: Youtube URL
+  // 2: Project Name
+  // Optional arguments: --separate-stems, --template-path=<templatePath>
   const {args, UUID} = input;
   pythonProcess = spawn(venvPath, [PYTHON_SCRIPT_PATH, ...args]);
 
@@ -590,6 +622,18 @@ ipcMain.on('run-python-script', (event, input) => {
 
   pythonProcess.on('close', (code) => {
 
+    // Create .FLP file in the project directory if not using a template
+    if (!hasTemplatePath(args)) {
+      const projectPath = args[0];
+      const projectName = args[2];
+      copyEmtpyFLP(path.join(projectPath, projectName, `${projectName}.flp`));
+      safeSend({
+        texto: 'Empty FLP file created',
+        UUID: UUID,
+        status: ESTADOS_SALIDA.SUCCESS
+      });
+    }
+
     console.log(`Proceso terminado con código ${code}`);
 
     cleanup();
@@ -629,7 +673,9 @@ ipcMain.on('run-python-script', (event, input) => {
 
 function lanzar_error(err)
 {
-  win.webContents.send('error-generico', err);
+  if (win && !win.isDestroyed()) { // <-- Verificación crítica
+    win.webContents.send('error-generico', err);
+  }
   console.log("\x1b[43m", err);  // Colores: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
   console.log("\x1b[0m", '');    // Resetear
 }

@@ -126,8 +126,7 @@ def download_video():
         create_info_file(key, bpm)
 
         # Crear la plantilla FLP
-        if template_path:
-            create_flp(key, bpm)
+        create_flp(key, bpm)
 
         # Abrir la carpeta donde hemos metido todo
         open_folder(project_path)

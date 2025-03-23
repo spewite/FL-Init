@@ -80,7 +80,7 @@ function configurarParametros(JSON_Config) {
 
   // Añadir un valor vacio al select
   insertar_option('');
-  document.querySelector("#template-flp option").textContent = '(no template)'
+  document.querySelector("#template-flp option").textContent = '(emtpy template)';
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
