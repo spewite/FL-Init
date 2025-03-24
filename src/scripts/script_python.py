@@ -1,6 +1,8 @@
 import os
+import shutil
 import sys
 import argparse 
+import stat
 
 from pytubefix import YouTube
 from moviepy.editor import AudioFileClip
@@ -177,28 +179,25 @@ def separate_audio(assets_path, audio_path):
     open_folder(stems_base)
 
 def move_stems_up(stems_base):
-    """
-    Busca la carpeta mdx_extra dentro de stems_base y mueve los archivos
-    de la subcarpeta (que corresponde al nombre del audio) a stems_base.
-    """
-    mdx_extra_dir = os.path.join(stems_base, "mdx_extra")
-    if not os.path.exists(mdx_extra_dir):
-        sacar_mensaje("The 'mdx_extra' folder was not found. Contact with creator please.")
-        return
+    def handle_remove_readonly(func, path, exc_info):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
 
-    # Recorrer cada carpeta dentro de mdx_extra (normalmente solo habrá una)
-    for subfolder in os.listdir(mdx_extra_dir):
-        subfolder_path = os.path.join(mdx_extra_dir, subfolder)
-        if os.path.isdir(subfolder_path):
-            for filename in os.listdir(subfolder_path):
-                src_file = os.path.join(subfolder_path, filename)
-                dest_file = os.path.join(stems_base, filename)
-                # Mover el archivo a la carpeta stems_base
-                os.rename(src_file, dest_file)
-            # Una vez movidos los archivos, eliminar la carpeta vacía
-            os.rmdir(subfolder_path)
-    # Eliminar la carpeta mdx_extra si ya está vacía
-    os.rmdir(mdx_extra_dir)
+    mdx_extra_dir = os.path.join(stems_base, "mdx_extra")
+    
+    if os.path.exists(mdx_extra_dir):
+        try:
+            # Move stem files to the base directory
+            for item in os.listdir(mdx_extra_dir):
+                src_path = os.path.join(mdx_extra_dir, item)
+                dst_path = os.path.join(stems_base, item)
+                shutil.move(src_path, dst_path)
+
+            # Delete recursively with error handling
+            shutil.rmtree(mdx_extra_dir, onerror=handle_remove_readonly)
+            sacar_mensaje(f"Successfully removed: {mdx_extra_dir}")
+        except Exception as e:
+            sacar_mensaje(f"Final removal failed: {str(e)}", error=True)
 
 # Función para abrir el directorio en el explorador de archivos
 def open_folder(path):
