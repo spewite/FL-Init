@@ -324,11 +324,16 @@ app.whenReady().then(() => {
   checkPythonVenv();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (win) {
+      // Si la ventana ya existe, mostrarla
+      win.show();
+      if (process.platform === 'darwin') app.dock.show();
+    } else {
+      // Si no existe, crear una nueva ventana
       createWindow();
     }
   });
-
+  
   // Verificar actualizaciones al iniciar la aplicación
   autoUpdater.checkForUpdates();
 });
