@@ -1,3 +1,3 @@
-- Error al copiar:
-    Moviendo los archivos a la carpeta stems...
-    Error al descargar el audio: [WinError 5] Acceso denegado: 'C:\\Users\\Izeta\\Desktop\\FL STUDIO\\PROYECTOS FL STUDIO\\[STEMS]\\Loriak Udan Stems\\assets\\stems\\mdx_extra'
+
+- Primary color: ¿#bb7956?
+- Guardar estado separar stems
