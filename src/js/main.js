@@ -573,6 +573,13 @@ ipcMain.on('run-python-script', (event, input) => {
   // 2: Project Name
   // Optional arguments: --separate-stems, --template-path=<templatePath>
   const {args, UUID} = input;
+
+  if (!hasTemplatePath(args)) {
+    args.push('--template-path=' + EMPTY_FLP_PATH);
+  }
+
+  console.log(args)
+
   pythonProcess = spawn(venvPath, [PYTHON_SCRIPT_PATH, ...args]);
 
   // Función segura para enviar mensajes
@@ -626,18 +633,6 @@ ipcMain.on('run-python-script', (event, input) => {
   });
 
   pythonProcess.on('close', (code) => {
-
-    // Create .FLP file in the project directory if not using a template
-    if (!hasTemplatePath(args)) {
-      const projectPath = args[0];
-      const projectName = args[2];
-      copyEmtpyFLP(path.join(projectPath, projectName, `${projectName}.flp`));
-      safeSend({
-        texto: 'Empty FLP file created',
-        UUID: UUID,
-        status: ESTADOS_SALIDA.SUCCESS
-      });
-    }
 
     console.log(`Proceso terminado con código ${code}`);
 
