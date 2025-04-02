@@ -1,2 +1,0 @@
-
-- Guardar estado separar stems
