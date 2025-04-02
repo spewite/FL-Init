@@ -9,13 +9,31 @@ const fs = require('fs');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
-
 const { ESTADOS_SALIDA } = require('../js/constants');
 
 let win;
-let tray = null; // Declaración global importante
-let isProcessRunning = false;
+let tray = null;
 let pythonProcess = null;
+let isProcessRunning = false;
+let isRestoringWindow = false;
+
+/// -----------------------  ///
+///      SINGLE INSTANCE     /// 
+/// -----------------------  ///
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, argv, workingDirectory) => {
+      if (win) {
+          isRestoringWindow = true;
+          if (win.isMinimized()) win.restore();
+          win.show();
+          win.focus();
+      }
+  });
+}
 
 /// -----------------  ///
 ///      SAVE QUIT     /// 
@@ -209,6 +227,7 @@ function crearTrayIcon() {
     
     // Evento para clic izquierdo
     tray.on('click', () => {
+      isRestoringWindow = true;
       if (win) {
         win.show();
         if (process.platform === 'darwin') app.dock.show();
@@ -260,6 +279,12 @@ function createWindow() {
 
   // Modifica el evento close de la ventana
   win.on('close', (event) => {
+    if (isRestoringWindow) {
+      event.preventDefault();
+      isRestoringWindow = false;
+      return;
+    }
+  
     if (!app.isQuitting) {
       if (isProcessRunning) {
         // Mostrar diálogo solo si hay proceso activo
@@ -325,7 +350,7 @@ app.whenReady().then(() => {
 
   app.on('activate', () => {
     if (win) {
-      // Si la ventana ya existe, mostrarla
+      isRestoringWindow = true;
       win.show();
       if (process.platform === 'darwin') app.dock.show();
     } else {
@@ -384,7 +409,8 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('error', (error) => {
   log.error('Error in the auto-updater:', error);
-  lanzar_error('Error in the auto-updater:', error);
+  console.error('Error details:', error);
+  lanzar_error('Error in the auto-updater: ' + (error.stack || error));
 });
 
 // Enviar la versión de la aplicación cuando el renderizador lo solicite
