@@ -437,22 +437,15 @@ ipcMain.on('validate-project-name', (event, data) => {
 ///          OBTENER CONFIGURACION        /// 
 /// ------------------------------------  ///
 
-ipcMain.on('obtener-configuracion', (event, data) => {
+ipcMain.on('obtener-configuracion', async () => {
 
-  obtener_configuracion()
-    .then(JSON_Config => {
-      // Si todo ha salido bien, mostrar la modal con la configuración actual
-      win.webContents.send('obtener-configuracion', JSON_Config);
-    })
-    .catch(error => {
+  try  {
+    const config = await obtener_configuracion();
+    win.webContents.send('obtener-configuracion', config);
+  } catch (error)  {
       lanzar_error(error);
-    });
-
+  }
 });
-
-/// ------------------------------------  ///
-///          CAMBIAR CONFIGURACION        /// 
-/// ------------------------------------  ///
 
 // Usar fs.promises para consistencia
 async function obtener_configuracion() {
@@ -460,27 +453,24 @@ async function obtener_configuracion() {
   return JSON.parse(data);
 }
 
-function cambiar_config() {
-  if (!win) {
-    console.error('La ventana no está inicializada');
-    return;
-  }
-  
-  obtener_configuracion()
-    .then(JSON_Config => {
-      // Si todo ha salido bien, mostrar la modal con la configuración actual
-      win.webContents.send('mostrar-modal', JSON_Config);
-    })
-    .catch(error => {
+/// ------------------------------------  ///
+///          CAMBIAR CONFIGURACION        /// 
+/// ------------------------------------  ///
+
+async function cambiar_config() {
+
+  try {
+    const config = await obtener_configuracion();
+    win.webContents.send('mostrar-modal', config);
+  } catch (error)  {
       lanzar_error(error);
-    });
+  }
+
 }
 
 ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
 
-  // CONFIG_PATH está declarado arriba de todo. 
-  
-  fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
+  fs.readFile(CONFIG_PATH, 'utf8', (err) => {
 
     if (err) {
       lanzar_error('Error reading configuration file: ' + err);
@@ -502,6 +492,25 @@ ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
 
 });
 
+ipcMain.on('save-stems-value', (event, separateStems) => {
+
+  fs.readFile(CONFIG_PATH, 'utf8', async (err) => {
+    
+    if (err) {
+      lanzar_error('Error reading configuration file: ' + err);
+      return;
+    }
+  
+    // Guardar la configuracion en el archivo de configuracion.
+    try {
+      const currentConfig = await obtener_configuracion();
+      const newConfig = JSON.stringify({...currentConfig, "separate_stems": separateStems}, null, 2); 
+      fs.writeFileSync(CONFIG_PATH, newConfig);
+    } catch (fileSaveError) {
+      lanzar_error('Error saving new configuration JSON: ' + fileSaveError);
+    }
+  });
+})
 
 /// ------------------------------------  ///
 ///       OPEN FILE/DIRECTORY DIALOG      ///
