@@ -1,4 +1,5 @@
 {
   "ruta_proyecto": "",
-  "ruta_plantillas": ""
+  "ruta_plantillas": "",
+  "separate_stems": false
 }

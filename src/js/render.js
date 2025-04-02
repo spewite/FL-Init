@@ -70,7 +70,7 @@ ipcRenderer.on('obtener-configuracion', (event, JSON_Config) => {
 
 function configurarParametros(JSON_Config) {
 
-  const {ruta_proyecto} = JSON_Config
+  const {ruta_proyecto, separate_stems} = JSON_Config
   
   if (!ruta_proyecto) {
     window.dialog.showModal();
@@ -84,6 +84,9 @@ function configurarParametros(JSON_Config) {
   
   // Cargar el combo de plantillas FLP
   cargar_plantillas();
+
+  // Set the default value of separate stems
+  inputSeparateStems.checked = separate_stems;
 }
 
 // ----- CERRAR MODAL ---- //
@@ -101,6 +104,11 @@ window.addEventListener("click", (e) => {
   // Cerrar dialog si se hace click fuera
   e.target.tagName == "DIALOG" && cerrar_dialog();
 });
+
+// ----- SAVE STEMS DEFAULT VALUE ---- //
+inputSeparateStems.addEventListener("change", () => {
+  saveStemsValue();
+})
 
 // ----- VALIDACION URL VALIDA ---- //
 inputYoutubeUrl.addEventListener("change", () => {
@@ -383,6 +391,12 @@ function guardar_configuracion()
   // Cerrar el modal
   cerrar_dialog();
 }
+
+function saveStemsValue() {
+  const value = inputSeparateStems.checked;
+  ipcRenderer.send('save-stems-value', value)
+}
+
 
 
 /// ------- BACKEND MODAL CONFIGURACIÓN ------  ///
