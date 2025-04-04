@@ -163,7 +163,7 @@ def separate_audio(assets_path, audio_path):
 
     # Ejecutar demucs con la ruta de salida en stems_base.
     # Esto generará una estructura: stems_base/mdx_extra/nombre_del_audio/(los 4 archivos)
-    command = f'--mp3 -n mdx_extra --out "{stems_base}" "{audio_path}"'
+    command = f'--mp3 --verbose -n mdx_extra --out "{stems_base}" "{audio_path}"'
     args = shlex.split(command)
 
     sacar_mensaje("Stem extraction in progress...")
@@ -174,8 +174,6 @@ def separate_audio(assets_path, audio_path):
 
     # Mover los archivos desde la estructura generada por demucs a la carpeta stems_base.
     move_stems_up(stems_base)
-
-    sacar_mensaje(f"The stems have been moved to: {stems_base}")
     open_folder(stems_base)
 
 def move_stems_up(stems_base):
@@ -187,13 +185,22 @@ def move_stems_up(stems_base):
     
     if os.path.exists(mdx_extra_dir):
         try:
-            # Move stem files to the base directory
-            for item in os.listdir(mdx_extra_dir):
-                src_path = os.path.join(mdx_extra_dir, item)
-                dst_path = os.path.join(stems_base, item)
-                shutil.move(src_path, dst_path)
+            # If there's exactly one subfolder, assume it's the extra folder from Demucs,
+            # and move its contents (the 4 stem files) to stems_base.
+            contents = os.listdir(mdx_extra_dir)
+            if len(contents) == 1 and os.path.isdir(os.path.join(mdx_extra_dir, contents[0])):
+                inner_dir = os.path.join(mdx_extra_dir, contents[0])
+                for item in os.listdir(inner_dir):
+                    src_path = os.path.join(inner_dir, item)
+                    dst_path = os.path.join(stems_base, item)
+                    shutil.move(src_path, dst_path)
+            else:
+                # Otherwise, move all items inside mdx_extra_dir.
+                for item in contents:
+                    src_path = os.path.join(mdx_extra_dir, item)
+                    dst_path = os.path.join(stems_base, item)
+                    shutil.move(src_path, dst_path)
 
-            # Delete recursively with error handling
             shutil.rmtree(mdx_extra_dir, onerror=handle_remove_readonly)
             sacar_mensaje(f"Successfully removed: {mdx_extra_dir}")
         except Exception as e:
