@@ -473,6 +473,10 @@ ipcRenderer.on('python-script-salida', (event, data) => {
 ///               UTILIDADES              /// 
 /// ------------------------------------  ///
 
+ipcRenderer.on('client-log', (event, message) => {
+  console.log("Client log:", message);
+});
+
 ipcRenderer.on('error-generico', (event, err) => {
   lanzar_error('Error', err)
 });

@@ -17,6 +17,11 @@ let pythonProcess = null;
 let isProcessRunning = false;
 let isRestoringWindow = false;
 
+/// ------ Make the app DPI aware ------  ///
+
+app.commandLine.appendSwitch('high-dpi-support', 'true');
+app.commandLine.appendSwitch('force-device-scale-factor', '1');
+
 /// -----------------------  ///
 ///      SINGLE INSTANCE     /// 
 /// -----------------------  ///
@@ -115,20 +120,29 @@ const venvPath = process.env.NODE_ENV === 'development'
 ? path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe') // Dev path
 : path.join(app.getPath('userData'), 'venv', 'Scripts', 'python.exe'); // Production path
 
-function checkPythonVenv() {
+function checkVenv() {
+  clientLog("NODE_ENV: ", process.env.NODE_ENV)
   if (process.env.NODE_ENV === 'production') {
     const venvTarget = path.join(app.getPath('userData'), 'venv');
     const pythonExecutable = path.join(venvTarget, 'Scripts', 'python.exe');
 
+    clientLog("venvTarget: ",  venvTarget)
+    clientLog("pythonExecutable: ",  pythonExecutable)
+
     if (!fs.existsSync(pythonExecutable)) {
       console.log('Copying Python virtual environment for production...');
+      clientLog("Copying Python virtual environment for production...")
+      
       try {
         fs.mkdirSync(venvTarget, { recursive: true });
-        const venvSource = path.join(app.getAppPath(), 'venv');
+        const venvSource = path.join(process.resourcesPath, 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
         lanzar_error('Failed to copy Python environment:', error);
       }
+    } else {
+      console.log("Venv found")
+      clientLog("Venv found")
     }
   }
 }
@@ -267,15 +281,14 @@ function createWindow() {
       contextIsolation: false
     }
   });
-
-
+  
   win.loadFile(path.join(__dirname, '../html/index.html'));
 
   // Maximizar la ventana después de crearla
   win.maximize();
 
   // Abrir DevTools automáticamente
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
 
   // Modifica el evento close de la ventana
   win.on('close', (event) => {
@@ -341,12 +354,13 @@ function createWindow() {
   ]);
 
   Menu.setApplicationMenu(menu);
+  clientLog("window created")
 }
 
 app.whenReady().then(() => {
   createWindow();
   checkFFmpeg();
-  checkPythonVenv();
+  checkVenv();
 
   app.on('activate', () => {
     if (win) {
@@ -361,6 +375,7 @@ app.whenReady().then(() => {
   
   // Verificar actualizaciones al iniciar la aplicación
   autoUpdater.checkForUpdates();
+
 });
 
 app.on('window-all-closed', () => {
@@ -705,6 +720,13 @@ ipcMain.on('run-python-script', (event, input) => {
 /// ------------------------------------  ///
 ///               UTILIDADES              ///
 /// ------------------------------------  ///
+
+function clientLog(...args) {
+  if (win && !win.isDestroyed()) {
+    // Send the joined log message to the renderer through the 'client-log' channel
+    win.webContents.send('client-log', args.join(' '));
+  }
+}
 
 function lanzar_error(err)
 {
