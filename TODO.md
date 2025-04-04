@@ -1,0 +1,4 @@
+- Contacto twitter: https://fontawesome.com/icons/x-twitter?f=brands&s=solid
+- Verificar autoupdate
+- Error stems: Error al descargar el audio: [WinError 5] Acceso denegado: 'C:\\Users\\Izeta\\Desktop\\FL STUDIO\\PROYECTOS FL STUDIO\\BASURA\\ecvevevevev\\assets\\stems\\mdx_extra\\Loriak Udan feat Rodol VX'
+- Traducir script python
