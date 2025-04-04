@@ -1,4 +1,3 @@
 - Verificar autoupdate
-
 - Traducir script python
 - Error stems: Error al descargar el audio: [WinError 5] Acceso denegado: 'C:\\Users\\Izeta\\Desktop\\FL STUDIO\\PROYECTOS FL STUDIO\\BASURA\\ecvevevevev\\assets\\stems\\mdx_extra\\Loriak Udan feat Rodol VX'
