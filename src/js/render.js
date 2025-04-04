@@ -1,4 +1,4 @@
-const { ipcRenderer, ipcMain } = require('electron');
+const { ipcRenderer, shell } = require('electron');
 const Swal = require('sweetalert2');
 
 const { ESTADOS_SALIDA } = require('../js/constants');
@@ -88,6 +88,15 @@ function configurarParametros(JSON_Config) {
   // Set the default value of separate stems
   inputSeparateStems.checked = separate_stems;
 }
+
+// ----- OPEN LINKS IN BROWSER ---- //
+document.addEventListener('click', function(e) {
+  const target = e.target.closest('a');
+  if (target && target.target === '_blank' && target.href.startsWith('http')) {
+    e.preventDefault();
+    shell.openExternal(target.href);
+  }
+});
 
 // ----- CERRAR MODAL ---- //
 btnCerrarModal.addEventListener("click", (e) => {
