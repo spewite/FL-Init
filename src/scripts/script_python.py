@@ -28,11 +28,9 @@ youtube_title = None
 
 original_stderr = None
 
-def output_message(mensaje, error=False):
-
+def output_message(mesage, error=False):
     output_channel = sys.stderr if error else sys.stdout
-
-    print(mensaje, file=output_channel)
+    print(mesage, file=output_channel)
     sys.stdout.flush()
 
 def is_video_valid():
@@ -218,7 +216,7 @@ def validate_project_name(name):
         raise ValueError("Invalid project name. The project name cannot end with a period or a space.")
 
 
-# Crear el proyecto de FL Studio
+# Create the FLP project
 def create_flp(key, bpm):
     if template_path:
         if os.path.isfile(template_path) and template_path.endswith('.flp'):
