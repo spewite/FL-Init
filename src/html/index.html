@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>FL Init</title>
@@ -11,7 +11,7 @@
 
   <dialog id="dialog">
     <div>
-      <button id="cerrar-modal" aria-label="close" class="x">❌</button>
+      <button id="close-modal" aria-label="close" class="x">❌</button>
 
       <h2>Configuration</h2>
        
@@ -20,7 +20,7 @@
       <div>
         <h3>Projects Location</h3>
         <div class="dialog-input-div">
-            <input type="text" id="dialog-input-proyecto" placeholder="Default project location path">
+            <input type="text" id="default-project-path" placeholder="Default project location path">
             <button type="button" data-browse-config>Browse</button>
         </div>
       </div>
@@ -30,13 +30,13 @@
       <div>
         <h3>.FLP templates directory</h3>
         <div class="dialog-input-div">
-            <input type="text" id="dialog-input-plantillas" placeholder="Default .flp templates location path">
+            <input type="text" id="dialog-default-templates-path" placeholder="Default .flp templates location path">
             <button type="button" data-browse-config>Browse</button>
         </div>
         
       </div>
       
-      <button style="width: 100%;" id="modal-guardar">SAVE</button>
+      <button style="width: 100%;" id="modal-save">SAVE</button>
     </div>
   </dialog>
 
@@ -71,7 +71,7 @@
       <div class="input-group">
         <label for="template-flp">FLP Template:</label>
         <select id="template-flp">
-          <!-- Opciones de plantillas se llenarán con JS -->
+          <!-- Templates options will be generates with JS -->
         </select>
         <button type="button" id="browse-flp-template">Browse</button>
       </div>

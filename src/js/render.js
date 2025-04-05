@@ -1,12 +1,10 @@
 const { ipcRenderer, shell } = require('electron');
 const Swal = require('sweetalert2');
 
-const { ESTADOS_SALIDA } = require('../js/constants');
+const { OUTPUT_STATES } = require('../js/constants');
+const changeEvent = new Event('change'); // Manually trigger the change event
 
-// Disparar el evento change manualmente
-const changeEvent = new Event('change');
-
-// Configuración del tema oscuro para SweetAlert2
+// Dark theme configuration for SweetAlert2
 const darkThemeOptions = {
   background: '#1e1e1e',
   color: '#ffffff',
@@ -15,37 +13,37 @@ const darkThemeOptions = {
 };
 
 /// ------------------------------------  ///
-///               NODOS HTML              /// 
+///               HTML NODES              /// 
 /// ------------------------------------  ///
 
 const pythonOutputContainer = document.getElementById("python-output-container");
 
-// -----  INPUTS PRINCIPALES ---- //
+// -----  MAIN INPUTS ---- //
 
-// Parametros obligatorios 
+// Required parameters 
 const inputYoutubeUrl = document.getElementById('youtube-url');
 const inputProjectLocation = document.getElementById('project-location');
 const inputProjectName = document.getElementById('project-name');
 
-// Parametros opcionales
+// Optional parameters
 const inputSeparateStems = document.getElementById('separate-stems'); 
 const inputTemplatePath = document.getElementById('template-flp');
 
 // -----  MODAL ---- //
-const btnModalGuardar = document.getElementById("modal-guardar");
-const btnCerrarModal = document.getElementById("cerrar-modal");
-const inputProyectoConfig = document.getElementById("dialog-input-proyecto"); 
-const inputPlantillasConfig = document.getElementById("dialog-input-plantillas"); 
+const btnModalSave = document.getElementById("modal-save");
+const btnModalClose = document.getElementById("close-modal");
+const inputProjectConfig = document.getElementById("default-project-path"); 
+const inputTemplatesConfig = document.getElementById("dialog-default-templates-path"); 
 const browseInputArrayConfig = document.querySelectorAll("button[data-browse-config]");
 
-// -----  CONTENEDORES ---- //
+// -----  CONTAINERS ---- //
 const progressDialogContainer = document.getElementById("progress-dialog-container");
 const youtubeInputGroup = document.getElementById("youtube-input-group");
 const projectNameInputGroup = document.getElementById("project-name-input-group");
 const directoryInputGroup = document.getElementById("directory-input-group");
 
 /// ------------------------------------  ///
-///           PONER LA VERSION            /// 
+///           DISPLAY THE VERSION         /// 
 /// ------------------------------------  ///
 
 ipcRenderer.invoke('get-app-version').then(version => {
@@ -59,31 +57,31 @@ ipcRenderer.invoke('get-app-version').then(version => {
 // ----- DOMContentLoaded ---- //
 document.addEventListener("DOMContentLoaded", (e) => {
 
-  // Cargar el parametro ruta de proyectos 
-  ipcRenderer.send("obtener-configuracion");
+  // Load the project path parameter
+  ipcRenderer.send("get-configuration");
 
 });
 
-ipcRenderer.on('obtener-configuracion', (event, JSON_Config) => {
-  configurarParametros(JSON_Config)
+ipcRenderer.on('get-configuration', (event, JSON_Config) => {
+  setupParameters(JSON_Config)
 });
 
-function configurarParametros(JSON_Config) {
+function setupParameters(JSON_Config) {
 
-  const {ruta_proyecto, separate_stems} = JSON_Config
+  const {project_path, separate_stems} = JSON_Config
   
-  if (!ruta_proyecto) {
+  if (!project_path) {
     window.dialog.showModal();
   } else {
-    inputProjectLocation.value = ruta_proyecto;
+    inputProjectLocation.value = project_path;
   } 
 
-  // Añadir un valor vacio al select
-  insertar_option('');
+  // Add empty value to templates select
+  insertOption('');
   document.querySelector("#template-flp option").textContent = '(emtpy template)';
   
-  // Cargar el combo de plantillas FLP
-  cargar_plantillas();
+  // Load templates combo
+  loadTemplates();
 
   // Set the default value of separate stems
   inputSeparateStems.checked = separate_stems;
@@ -98,20 +96,20 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ----- CERRAR MODAL ---- //
-btnCerrarModal.addEventListener("click", (e) => {
-  cerrar_dialog();
+// ----- MODAL CLOSE ---- //
+btnModalClose.addEventListener("click", (e) => {
+  closeDialog();
 });
 
-// ----- GUARDAR MODAL ---- //
-btnModalGuardar.addEventListener('click', () => {
-  guardar_configuracion();
+// ----- SAVE MODAL ---- //
+btnModalSave.addEventListener('click', () => {
+  saveConfiguration();
 });
 
 // ----- WINDOW ONCLICK ---- //
 window.addEventListener("click", (e) => {
-  // Cerrar dialog si se hace click fuera
-  e.target.tagName == "DIALOG" && cerrar_dialog();
+  // Close dialog if clicked outside
+  e.target.tagName == "DIALOG" && closeDialog();
 });
 
 // ----- SAVE STEMS DEFAULT VALUE ---- //
@@ -119,31 +117,30 @@ inputSeparateStems.addEventListener("change", () => {
   saveStemsValue();
 })
 
-// ----- VALIDACION URL VALIDA ---- //
+// ----- VALID URL VALIDATION ---- //
 inputYoutubeUrl.addEventListener("change", () => {
 
   const url = inputYoutubeUrl.value;
-  const urlEsValida = validarURLYoutube(url);
+  const isValidURL = validateYoutubeURL(url);
   const warning_p = youtubeInputGroup.querySelector(".warning");
 
-  // Si el campo está vacio quitamos el warning
-  // Si ya muestra el mensaje y el usuario mete un valor correcto quitamos el warning 
-  if (warning_p && urlEsValida || !url)
-  {
-    // Agregar la clase de animación
+  // If the field is empty, remove the warning
+  // If the warning message is already displayed and the user enters a valid value, remove the warning
+  if (warning_p && isValidURL || !url) {
+    // Add the animation class
     warning_p.classList.add("fade-out");
 
-    // Esperar a que la animación termine y eliminar el elemento del DOM
+    // Wait for the animation to finish and remove the element from the DOM
     warning_p.addEventListener('animationend', function() {
-      // Eliminar el elemento del DOM
+      // Remove the element from the DOM
       warning_p.remove();
     }, { once: true });
 
-    return
-  } 
+    return;
+  }
 
-  // Si la url no es válida y no tiene puesta la advertencia.
-  if (!urlEsValida && !warning_p)
+  // If the URL is invalid and the warning is not already displayed.
+  if (!isValidURL && !warning_p)
   {
     const warning_p = document.createElement("p");
     warning_p.textContent = "⚠️ The URL doesn't seem to be from Youtube!"
@@ -154,8 +151,7 @@ inputYoutubeUrl.addEventListener("change", () => {
 
 })
 
-// ----- VALIDACION NOMBRE DE PROYECTO VÁLIDO ---- //
-
+// ----- VALIDATE PROJECT NAME ---- //
 inputProjectLocation.addEventListener("change", () => {
   validateProjectName();
   validateDirectory();
@@ -167,22 +163,22 @@ inputProjectName.addEventListener("change", () => {
 });
 
 function validateDirectory() {
-  const directorio = inputProjectLocation.value;
-  ipcRenderer.send("validate-directory", directorio);
+  const directory = inputProjectLocation.value;
+  ipcRenderer.send("validate-directory", directory);
 }
 
 function validateProjectName() {
 
-  const ruta = inputProjectLocation.value;
-  const directorio = inputProjectName.value;
+  const projectPath = inputProjectLocation.value;
+  const directory = inputProjectName.value;
 
-  if (!ruta || !directorio) {
+  if (!projectPath || !directory) {
     return
   }
   
   ipcRenderer.send("validate-project-name", {
-    ruta: ruta,
-    directorio: directorio
+    path: projectPath,
+    directory: directory
   });
 }
 
@@ -204,29 +200,25 @@ ipcRenderer.on('validate-project-name', (event, response) => {
   }
 });
 
-// Auxiliar funcion to show errors
-function displayError(mensaje, parent) {
+function displayError(mesage, parent) {
   removeError(parent);
-  
   const error_p = document.createElement("p");
-  error_p.innerHTML = mensaje;
+  error_p.innerHTML = mesage;
   error_p.className = "error slide-fade-in";
   parent.appendChild(error_p);
 }
 
-function removeError(parent)
-{
+function removeError(parent) {
   const error_p = parent.querySelector(".error");
 
-  // Si el directorio no existe y se esta mostrando un mensaje de error, se quita.
-  if (error_p)
-  {
-    // Agregar la clase de animación
+  // If the directory does not exist and an error message is being displayed, remove it.
+  if (error_p) {
+    // Add the animation class
     error_p.classList.add("fade-out");
     
-    // Esperar a que la animación termine y eliminar el elemento del DOM
+    // Wait for the animation to finish and remove the element from the DOM
     error_p.addEventListener('animationend', function() {
-      // Eliminar el elemento del DOM
+      // Remove the element from the DOM
       error_p.remove();
     }, { once: true });
   }
@@ -237,108 +229,107 @@ function removeError(parent)
 document.getElementById('form').addEventListener('submit', function(event) {
   event.preventDefault();
 
-  // Parametros obligatorios 
+  // Required parameters 
   const youtubeUrl = inputYoutubeUrl.value;
   const projectLocation = inputProjectLocation.value;
   const projectName = inputProjectName.value;
 
-  // Validacion de campos
+  // Field validations
   if (!youtubeUrl.trim() || !projectLocation.trim()  || !projectName.trim() )
   {
-    let camposSinRellenar = "The following fields are required: ";
+    let emptyFields = "The following fields are required: ";
 
-    camposSinRellenar = !youtubeUrl.trim() ? `${camposSinRellenar} <br /> - Youtube URL ` : camposSinRellenar;
-    camposSinRellenar = !projectLocation.trim() ? `${camposSinRellenar} <br /> - Project Location ` : camposSinRellenar;
-    camposSinRellenar = !projectName.trim() ? `${camposSinRellenar} <br /> - Project Name ` : camposSinRellenar;
+    emptyFields = !youtubeUrl.trim() ? `${emptyFields} <br /> - Youtube URL ` : emptyFields;
+    emptyFields = !projectLocation.trim() ? `${emptyFields} <br /> - Project Location ` : emptyFields;
+    emptyFields = !projectName.trim() ? `${emptyFields} <br /> - Project Name ` : emptyFields;
 
-    lanzar_error('Validation Error', camposSinRellenar);
+    throwError('Validation Error', emptyFields);
     return;
   }
   
   const error_p = projectNameInputGroup.querySelector(".error");
   if (error_p)
   {
-    lanzar_error('Error de validación', `${error_p.innerHTML} <br/> Change the project location or choose a unique project name.`);
+    throwError('Validation error', `${error_p.innerHTML} <br/> Change the project location or choose a unique project name.`);
     return
   } 
 
-  // Parametros opcionales
+  // Optional parameters
   const separateStems = inputSeparateStems.checked; 
   const templatePath = inputTemplatePath.value;
 
 
-  // Argumentos para el script de Python
+  // Python script's arguments
   const args = [projectLocation, youtubeUrl, projectName];
   
   if (separateStems) {
     args.push('--separate-stems');
   }
 
-  if (templatePath)
-  {
+  if (templatePath) {
     args.push(`--template-path=${templatePath}`);
   }
 
-  // Añadirle un UUID para identificar cada progreso.
+  // Add UUID to identify each process
   const UUID = crypto.randomUUID();
 
-  const salida = {
+  const output = {
     args: args,
     UUID: UUID
   }
   
-  // Llama a la función para ejecutar el script de Python
-  ipcRenderer.send('run-python-script', salida);
+  // Execute the python script
+  ipcRenderer.send('run-python-script', output);
 
-  // ---- VACIAR INPUTS ---- //
+  // Clear inputs
   inputYoutubeUrl.value = "";
   inputProjectName.value = "";
 
-  // ---- INSERTAR TEXTO DEL LOG ---- //
+  // ---- Insert logs ---- //
 
-  // Si el contenedor del log esta oculto se muestra.
+  // If the log container is hidden show it
   document.querySelector(".progress-div").classList.remove("hide")
   
-  // Añadir el texto
-  const p_salida = document.createElement("p");
+  // Create the button to display the log modal
+  const modalButton = document.createElement("p");
   const textNode = document.createTextNode(projectName);
-  p_salida.append(textNode);
-  p_salida.setAttribute("data-dialog", UUID);
-  p_salida.classList.add("push-button-3d");
-  pythonOutputContainer.appendChild(p_salida);
+  modalButton.append(textNode);
+  modalButton.setAttribute("data-dialog", UUID);
+  modalButton.classList.add("push-button-3d");
+  pythonOutputContainer.appendChild(modalButton);
 
-  // Añadir una clase para activar la animación
-  p_salida.classList.add("fade-in");
+  // Show the modal with an animation
+  modalButton.classList.add("fade-in");
 
-  p_salida.addEventListener("click", () => {
-    const data_dialog = p_salida.getAttribute("data-dialog");
+  modalButton.addEventListener("click", () => {
+    const data_dialog = modalButton.getAttribute("data-dialog");
     const dialog = document.querySelector(`dialog[data-uuid='${data_dialog}']`)
     dialog.showModal();
   });
 
-  // ---- CREAR LA MODAL PARA EL TEXTO DEL LOG ---- //
+  // ---- Create the modal for the logs ---- //
 
   const dialog_template = document.querySelector("dialog[data-template-dialog]");
   const dialog = dialog_template.cloneNode(true);
 
   dialog.setAttribute("data-uuid", UUID);
 
-  const pProgressTitle = dialog.getElementsByClassName("progress-title")[0];
-  pProgressTitle.textContent = projectName;
+  const modalTitle = dialog.getElementsByClassName("progress-title")[0];
+  modalTitle.textContent = projectName;
 
   dialog.getElementsByClassName("x")[0].addEventListener("click", () => {
-    cerrar_dialog();
+    closeDialog();
   });
 
   progressDialogContainer.appendChild(dialog);
-  insertarPythonOutput("Loading script...", UUID, "#747474")
+  insertPythonOutput("Loading script...", UUID, "#747474")
   dialog.showModal();
 
 });
 
-/// ------------------------------------  ///
-///      LLAMADA BACKEND FILE DIALOG      /// 
-/// ------------------------------------  ///
+/// ------------------------- ///
+///      FILE DIALOG CALL     /// 
+/// ------------------------- ///
 
 document.getElementById('browse-location').addEventListener('click', (e) => {
   ipcRenderer.send('open-directory-dialog', 'project-location');
@@ -348,7 +339,7 @@ document.getElementById('browse-flp-template').addEventListener('click', (e) => 
   ipcRenderer.send('open-file-dialog', ['flp']);
 });
 
-// Botones "Browse" del modal de configuración.
+// "Browse" buttons in the configuration modal.
 browseInputArrayConfig.forEach(browseInput => {  
   browseInput.addEventListener('click', (e) => {
     const inputConfigId = e.target.closest("div").getElementsByTagName("INPUT")[0].id;
@@ -361,44 +352,37 @@ browseInputArrayConfig.forEach(browseInput => {
 /// ------------------------------------  ///
 
 ipcRenderer.on('selected-directory', (event, args) => {
-
-  const {path} = args;
-  const {input_id} = args;
-
+  const {path, input_id} = args;
   const input = document.getElementById(input_id); 
   input.value = path; 
-  input.dispatchEvent(changeEvent); // Dispara el evento 'change'
+  input.dispatchEvent(changeEvent); // Executes the change event
 });
 
 ipcRenderer.on('selected-file', (event, filePath) => {
-  insertar_option(filePath);
+  insertOption(filePath);
 });
 
-
 /// ------------------------------------  ///
-///           MODAL CONFIGURACIÓN         /// 
+///           MODAL CONFIGURATION         /// 
 /// ------------------------------------  ///
 
-
-function cerrar_dialog()
-{
+function closeDialog() {
   document.querySelector("dialog[open]").close();
 }
 
-function guardar_configuracion()
+function saveConfiguration()
 {
-  const valorProyecto = inputProyectoConfig.value;
-  const valorPlantillas = inputPlantillasConfig.value;
+  const projectPath = inputProjectConfig.value;
+  const templatesPath = inputTemplatesConfig.value;
 
   const JSON_Config = {
-    "ruta_proyecto": valorProyecto,
-    "ruta_plantillas": valorPlantillas
+    "project_path": projectPath,
+    "templates_path": templatesPath
   }
 
-  ipcRenderer.send('cambiar-config-valores', JSON_Config);
+  ipcRenderer.send('change-config', JSON_Config);
 
-  // Cerrar el modal
-  cerrar_dialog();
+  closeDialog();
 }
 
 function saveStemsValue() {
@@ -406,24 +390,22 @@ function saveStemsValue() {
   ipcRenderer.send('save-stems-value', value)
 }
 
+/// ------- BACKEND MODAL CONFIGURATION ------  ///
 
-
-/// ------- BACKEND MODAL CONFIGURACIÓN ------  ///
-
-ipcRenderer.on('mostrar-modal', (event, valoresConfiguracionActual) => {  
+ipcRenderer.on('show-modal', (event, currentConfig) => {  
   
-  // Rellenar los inputs con los datos de configuración actual.
-  const {ruta_proyecto} = valoresConfiguracionActual;
-  const {ruta_plantillas} = valoresConfiguracionActual;
+  // Fill the inputs with the current configuration data.
+  const {project_path} = currentConfig;
+  const {templates_path} = currentConfig;
 
-  inputProyectoConfig.value = ruta_proyecto;
-  inputPlantillasConfig.value = ruta_plantillas;
+  inputProjectConfig.value = project_path;
+  inputTemplatesConfig.value = templates_path;
 
-  // Mostrar el modal
+  // Show the configuration modal
   window.dialog.showModal();
 });
 
-ipcRenderer.on('configuracion-guardada', (event, config) => {
+ipcRenderer.on('config-saved', (event, config) => {
   
   Swal.fire({
     text: "The settings have been saved successfully!",
@@ -435,69 +417,69 @@ ipcRenderer.on('configuracion-guardada', (event, config) => {
   
   jsonConfig = JSON.parse(jsonConfig);
 
-  // Poner la nueva configuración en los inputs.
-  inputProjectLocation.value = jsonConfig["ruta_proyecto"];
-  inputTemplatePath.value = jsonConfig["ruta_plantillas"];
+  // Set the new configuration values in the inputs
+  inputProjectLocation.value = jsonConfig["project_path"];
+  inputTemplatePath.value = jsonConfig["templates_path"];
 
-  // Cargar las plantillas de la nueva configuración
-  cargar_plantillas()
+  // Load the templates of the new configuration
+  loadTemplates()
 });
 
-/// ------------------------------------  ///
-///         BACKEND PYTHON RETORNO        /// 
-/// ------------------------------------  ///
+/// ---------------------------  ///
+///         PYTHON OUTPUT        /// 
+/// ---------------------------  ///
 
-ipcRenderer.on('python-script-salida', (event, data) => {
+ipcRenderer.on('python-script-output', (event, data) => {
 
-  const {texto} = data;
-  const {UUID} = data;
-  const {status} = data;
-  
-  let color_texto = "white"; // Por defecto.
+  const {text, UUID, status} = data;
+  let textColor;
 
-  if (status == ESTADOS_SALIDA.ERROR)
-  {
-    color_texto = "#c52828";
-  } else if (status == ESTADOS_SALIDA.INFO)
-  {
-    color_texto = "#14bef3";
-  } else if (status == ESTADOS_SALIDA.SUCCESS)
-  {
-    color_texto = "#5dc52a";
+  switch (status) {
+    case OUTPUT_STATES.ERROR:
+      textColor = "#c52828";
+      break
+    case OUTPUT_STATES.INFO:
+      textColor = "#14bef3";
+      break
+    case OUTPUT_STATES.SUCCESS:
+      textColor = "#5dc52a";
+      break
+    default: 
+      textColor = "white";
   }
 
-  insertarPythonOutput(texto, UUID, color_texto);
+  insertPythonOutput(text, UUID, textColor);
 });
 
-/// ------------------------------------  ///
-///               UTILIDADES              /// 
-/// ------------------------------------  ///
+/// ----------------------  ///
+///        UTILITIES        /// 
+/// ----------------------  ///
 
 ipcRenderer.on('client-log', (event, message) => {
   console.log("Client log:", message);
 });
 
-ipcRenderer.on('error-generico', (event, err) => {
-  lanzar_error('Error', err)
+ipcRenderer.on('generic-error', (event, err) => {
+  throwError('Error', err)
 });
 
-function lanzar_error(titulo, err)
+function throwError(title, err)
 {
   Swal.fire({
-    title: titulo,
+    title: title,
     html: `<p>${err}</p>`,
     icon: "error",
     ...darkThemeOptions
   });
 }
 
-function insertarPythonOutput(mensaje, UUID, color)
+function insertPythonOutput(mesage, UUID, color)
 {
   const dialog = document.querySelector(`dialog[data-uuid='${UUID}']`)
   const div = dialog.querySelector(".body")
 
   const p = document.createElement("p");
-  const nodo = document.createTextNode(mensaje);
+  const nodo = document.createTextNode(mesage);
 
   p.appendChild(nodo);
   p.setAttribute("style", `color:${color};`) 
@@ -506,48 +488,47 @@ function insertarPythonOutput(mensaje, UUID, color)
   div.scrollTop = div.scrollHeight
 }
 
-function cargar_plantillas()
-{
-  ipcRenderer.send('pedir-lista-plantillas');
+function loadTemplates(){
+  ipcRenderer.send('ask-templates-list');
 }
 
-ipcRenderer.on('obtener-lista-plantillas', (event, json_arrays) => {
+ipcRenderer.on('get-templates-list', (event, json_arrays) => {
   
-  const {rutasArchivos} = json_arrays;
+  const { filesPaths } = json_arrays;
 
-  rutasArchivos.forEach( rutaArchivo => {
-    insertar_option(rutaArchivo);
+  filesPaths.forEach( filePath => {
+    insertOption(filePath);
   })
 });
 
 
-function insertar_option(rutaArchivo)
+function insertOption(filePath)
 {
   const select = inputTemplatePath;
 
-  // Crea un nuevo elemento option
+  // Create option element
   var option = document.createElement("option");
 
-  // Divide la cadena por las barras invertidas
-  let partes = rutaArchivo.split('\\');
-  const nombreArchivo = partes[partes.length-1];
+  // Split the string by backslashes
+  let parts = filePath.split('\\');
+  const fileName = parts[parts.length - 1];
 
-  // Configura el texto y el valor del nuevo elemento option
-  option.text = nombreArchivo;
-  option.value = rutaArchivo;
+  // Set the text and value of the new option element
+  option.text = fileName;
+  option.value = filePath;
 
-  // Añade el nuevo elemento option al select
+  // Add the new option element to the select
   select.appendChild(option);
 
-  // Seleccionar el elemento que hemos añadido
+  // Select the element we just added
   select.selectedIndex = select.options.length-1;
 }
 
-function validarURLYoutube(url) {
-  if (url !== undefined && url !== '') { // Verificar que la URL no sea undefined ni vacía
+function validateYoutubeURL(url) {
+  if (!url) {
     var regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    var match = url.match(regExp); // Realizar la coincidencia con la expresión regular
-    if (match) { // Verificar si hubo coincidencia
+    var match = url.match(regExp);
+    if (match) {
       return true;
     } else {
       return false;
