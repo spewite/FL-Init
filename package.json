@@ -54,7 +54,9 @@
     "win": {
       "target": "nsis",
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "icon": "icons/icon.ico"
+      "icon": "icons/icon.ico",
+      "dpiAware": true,
+      "dpiAwareness": "permonitorv2"
     },
     "mac": {
       "target": "dmg",
