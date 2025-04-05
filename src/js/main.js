@@ -121,17 +121,12 @@ const venvPath = process.env.NODE_ENV === 'development'
 : path.join(app.getPath('userData'), 'venv', 'Scripts', 'python.exe'); // Production path
 
 function checkVenv() {
-  clientLog("NODE_ENV: ", process.env.NODE_ENV)
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'development') {
     const venvTarget = path.join(app.getPath('userData'), 'venv');
     const pythonExecutable = path.join(venvTarget, 'Scripts', 'python.exe');
 
-    clientLog("venvTarget: ",  venvTarget)
-    clientLog("pythonExecutable: ",  pythonExecutable)
-
     if (!fs.existsSync(pythonExecutable)) {
       console.log('Copying Python virtual environment for production...');
-      clientLog("Copying Python virtual environment for production...")
       
       try {
         fs.mkdirSync(venvTarget, { recursive: true });
@@ -142,7 +137,6 @@ function checkVenv() {
       }
     } else {
       console.log("Venv found")
-      clientLog("Venv found")
     }
   }
 }
@@ -354,7 +348,6 @@ function createWindow() {
   ]);
 
   Menu.setApplicationMenu(menu);
-  clientLog("window created")
 }
 
 app.whenReady().then(() => {
