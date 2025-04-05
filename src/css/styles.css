@@ -105,7 +105,7 @@ header {
 }
 
 .twitter-logo:hover {
-  animation: none;
+  /* animation: none; */
   transform: scale(1.1);
   filter: drop-shadow(0 0 1rem orange);
 }
@@ -118,9 +118,9 @@ header {
   }
 }
 
-/*  ------------------------------------  ///
-///               FORMULARIO              /// 
-/// ------------------------------------   */
+/*  ------------------------------  ///
+///               FORM              /// 
+/// ------------------------------   */
 
 form {
   display: flex;
@@ -265,7 +265,7 @@ input[type=submit]
 }
 
 /*  ------------------------------------  ///
-///          MODAL CONFIGURACIÓN          /// 
+///          MODAL CONFIGURATION          /// 
 /// ------------------------------------   */
 
 dialog {
@@ -370,7 +370,7 @@ dialog hr
 }
 
 /*  ------------------------------------  ///
-///             MODAL PROGRESO            /// 
+///             PROGRESS MODAL            /// 
 /// ------------------------------------   */
 
 #progress-dialog-container dialog

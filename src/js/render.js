@@ -163,8 +163,8 @@ inputProjectName.addEventListener("change", () => {
 });
 
 function validateDirectory() {
-  const directory = inputProjectLocation.value;
-  ipcRenderer.send("validate-directory", directory);
+  const projectPath = inputProjectLocation.value;
+  ipcRenderer.send("validate-directory", projectPath);
 }
 
 function validateProjectName() {
@@ -177,7 +177,7 @@ function validateProjectName() {
   }
   
   ipcRenderer.send("validate-project-name", {
-    path: projectPath,
+    projectPath: projectPath,
     directory: directory
   });
 }
@@ -352,9 +352,9 @@ browseInputArrayConfig.forEach(browseInput => {
 /// ------------------------------------  ///
 
 ipcRenderer.on('selected-directory', (event, args) => {
-  const {path, input_id} = args;
+  const {directoryPath, input_id} = args;
   const input = document.getElementById(input_id); 
-  input.value = path; 
+  input.value = directoryPath; 
   input.dispatchEvent(changeEvent); // Executes the change event
 });
 
@@ -525,7 +525,7 @@ function insertOption(filePath)
 }
 
 function validateYoutubeURL(url) {
-  if (!url) {
+  if (url) {
     var regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     var match = url.match(regExp);
     if (match) {

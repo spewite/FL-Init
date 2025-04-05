@@ -425,15 +425,15 @@ ipcMain.handle('get-app-version', async () => {
 ///              VALIDATION             /// 
 /// ----------------------------------  ///
 
-ipcMain.on('validate-directory', (event, ruta) => {
+ipcMain.on('validate-directory', (event, pathToValidate) => {
 
-  fs.stat(ruta, (err, stats) => {
+  fs.stat(pathToValidate, (err, stats) => {
 
     const response = { success: true, errorMessage: '' };
 
     if (err || !stats.isDirectory()) {
       response.success = false;
-      response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${ruta}</span> does not exist!</p>`;
+      response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> does not exist!</p>`;
     }
     
     event.reply('validate-directory', response);
@@ -445,16 +445,16 @@ ipcMain.on('validate-directory', (event, ruta) => {
 
 ipcMain.on('validate-project-name', (event, data) => {
 
-  const { path, directory } = data;
-  const rutaParaValidar = path.join(path, directory);
+  const { projectPath, directory } = data;
+  const pathToValidate = path.join(projectPath, directory);
   
-  fs.access(rutaParaValidar, fs.constants.F_OK, (err) => {
+  fs.access(pathToValidate, fs.constants.F_OK, (err) => {
     
     const response = { success: true, errorMessage: '' };
 
     if (!err) {
       response.success = false;
-      response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${rutaParaValidar}</span> already exists!</p>`;
+      response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> already exists!</p>`;
     }
 
     event.reply('validate-project-name', response);
@@ -554,7 +554,7 @@ ipcMain.on('open-directory-dialog', (event, input_id) => {
     if (!result.canceled && result.filePaths.length > 0) {
 
       event.sender.send('selected-directory', {
-        path: result.filePaths[0],
+        directoryPath: result.filePaths[0],
         input_id: input_id
       });
     }
