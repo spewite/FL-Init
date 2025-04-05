@@ -29,7 +29,7 @@
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.1",
     "electron": "^30.0.2",
-    "electron-builder": "^24.3.0",
+    "electron-builder": "^24.13.3",
     "style-loader": "^4.0.0",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
@@ -54,9 +54,7 @@
     "win": {
       "target": "nsis",
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "icon": "icons/icon.ico",
-      "dpiAware": true,
-      "dpiAwareness": "permonitorv2"
+      "icon": "icons/icon.ico"
     },
     "mac": {
       "target": "dmg",
