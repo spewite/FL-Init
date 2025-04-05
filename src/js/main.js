@@ -17,10 +17,8 @@ let pythonProcess = null;
 let isProcessRunning = false;
 let isRestoringWindow = false;
 
-/// ------ Make the app DPI aware ------  ///
-
-app.commandLine.appendSwitch('high-dpi-support', 'true');
-app.commandLine.appendSwitch('force-device-scale-factor', '1');
+// Fix blurryness (DPI Awareness)
+app.disableHardwareAcceleration();
 
 /// -----------------------  ///
 ///      SINGLE INSTANCE     /// 

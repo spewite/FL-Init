@@ -1,3 +1,2 @@
 - Traducir script python
 - No se copia los archivos a APPDATA
-- DPI Aware
