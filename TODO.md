@@ -1,3 +1,2 @@
-- Block app while updating
 - Check DPI Aware
 - Look if the venv can be copied into APPDATA in the installation process, and if not, create a loading screen.
