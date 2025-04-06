@@ -1,7 +1,7 @@
 {
   "name": "flinit",
   "version": "1.0.10",
-  "description": "FL INIT es una aplicación diseñado para simplificar la creación de proyectos en FL Studio utilizando canciones de YouTube. Esta aplicación automatiza la descarga de audio y facilita la configuración inicial de proyectos en FL Studio. Los usuarios pueden seleccionar una plantilla .flp específica para cada proyecto y, opcionalmente, extraer los stems de las canciones.",
+  "description": "FL INIT is an application designed to simplify the creation of projects in FL Studio using songs from YouTube. This application automates audio downloading and facilitates the initial setup of projects in FL Studio. Users can select a specific .flp template for each project and optionally extract the stems of the songs.",
   "main": "src/js/main.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --mode production",
