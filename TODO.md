@@ -1,2 +1,4 @@
-- Traducir script python
+- Block app while updating
+- Remove the outline from twitter logo
+- Check DPI Aware
 - No se copia los archivos a APPDATA
