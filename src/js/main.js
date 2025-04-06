@@ -111,8 +111,10 @@ function installFFmpeg() {
 ///          VENV           /// 
 /// ----------------------  ///
 
-// Modified venvPath: always use installation path
-const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe'); // Use installation path for venv
+// Modified venvPath to conditionally use the correct directory based on environment
+const venvPath = process.env.NODE_ENV === 'development'
+  ? path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe')  // Development: venv within app directory
+  : path.join(process.resourcesPath, 'venv', 'Scripts', 'python.exe'); // Production: venv in resources directory
 
 // Simplified checkVenv function
 function checkVenv() {
