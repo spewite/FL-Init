@@ -227,10 +227,6 @@ try {
 ///         ELECTRON CONFIGURATION        /// 
 /// ------------------------------------  ///
 
-// Enable high DPI support
-app.commandLine.appendSwitch('high-dpi-support', '1');
-app.commandLine.appendSwitch('force-device-scale-factor', '1');
-
 // Function to create the tray icon
 function createTrayIcon() {
   if (!tray) {
