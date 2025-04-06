@@ -88,8 +88,8 @@
         ]
       },
       {
-        "from": "venv/",
-        "to": "venv",
+        "from": "python-embed/",
+        "to": "python-embed",
         "filter": [
           "**/*"
         ]

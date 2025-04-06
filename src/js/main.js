@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const { OUTPUT_STATES } = require('../js/constants');
 
 let win;
@@ -106,24 +106,22 @@ function installFFmpeg() {
   }
 }
 
+/// ------------------------------  ///
+///          PYTHON EMBED           /// 
+/// ------------------------------  ///
 
-/// ----------------------  ///
-///          VENV           /// 
-/// ----------------------  ///
+const pythonEmbedPath = process.env.NODE_ENV === 'development'
+  ? path.join(app.getAppPath(), 'python-embed', 'python.exe')  // Development: local embed folder
+  : path.join(process.resourcesPath, 'python-embed', 'python.exe'); // Production: bundled with your app
 
-// Modified venvPath to conditionally use the correct directory based on environment
-const venvPath = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe')  // Development: venv within app directory
-  : path.join(process.resourcesPath, 'venv', 'Scripts', 'python.exe'); // Production: venv in resources directory
-
-// Simplified checkVenv function
-function checkVenv() {
-  clientLog("VenvPath: " + venvPath)
-  if (!fs.existsSync(venvPath)) {
-    console.error('Python virtual environment not found at installation path:', venvPath);
-    throwError('Python virtual environment not found.');
+// Simplified function to verify bundled Python exists.
+function checkEmbed() {
+  clientLog("embed path: " + pythonEmbedPath);
+  if (!fs.existsSync(pythonEmbedPath)) {
+    console.error('Embedded Python not found at:', pythonEmbedPath);
+    throwError('Embedded Python was not found. Please ensure the python-embed folder is packaged with the app.');
   } else {
-    console.log("Virtual environment found at installation path.");
+    console.log("Embedded Python found at installation path.");
   }
 }
 
@@ -321,7 +319,7 @@ function createWindow() {
 
   win.webContents.on('did-finish-load', () => {
     console.log('Page fully loaded');
-    checkVenv();
+    checkEmbed();
   });
 }
 
@@ -576,7 +574,7 @@ ipcMain.on('run-python-script', (event, input) => {
     args.push('--template-path=' + EMPTY_FLP_PATH);
   }
 
-  pythonProcess = spawn(venvPath, [PYTHON_SCRIPT_PATH, ...args]);
+  pythonProcess = spawn(pythonEmbedPath, [PYTHON_SCRIPT_PATH, ...args]);
 
   // Secure function to send messages
   const safeSend = (message) => {
