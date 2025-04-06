@@ -78,7 +78,7 @@ function setupParameters(JSON_Config) {
 
   // Add empty value to templates select
   insertOption('');
-  document.querySelector("#template-flp option").textContent = '(emtpy template)';
+  document.querySelector("#template-flp option").textContent = '(empty template)';
   
   // Load templates combo
   loadTemplates();
