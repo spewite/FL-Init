@@ -1,4 +1,3 @@
-
 /// ------------------------------------  ///
 ///             GLOBAL VARIABLES          /// 
 /// ------------------------------------  ///
@@ -127,16 +126,16 @@ function checkVenv() {
       try {
         win.webContents.send('block-ui', true);
         fs.mkdirSync(venvTarget, { recursive: true });
-        const venvSource = path.join(process.resourcesPath, 'venv');
+        const venvSource = path.join(app.getAppPath(), 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
-        console.log(error)
+        console.log(error);
         throwError('Failed to copy Python environment: ' + error);
       } finally {
         win.webContents.send('block-ui', false);
       }
     } else {
-      console.log("Venv found")
+      console.log("Venv found");
     }
   }
 }
@@ -348,12 +347,16 @@ function createWindow() {
   ]);
 
   Menu.setApplicationMenu(menu);
+
+  win.webContents.on('did-finish-load', () => {
+    console.log('Page fully loaded');
+    checkVenv();
+  });
 }
 
 app.whenReady().then(() => {
   createWindow();
   checkFFmpeg();
-  checkVenv();
 
   app.on('activate', () => {
     if (win) {
