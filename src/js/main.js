@@ -125,11 +125,14 @@ function checkVenv() {
       console.log('Copying Python virtual environment for production...');
       
       try {
+        win.webContents.send('block-ui', true);
         fs.mkdirSync(venvTarget, { recursive: true });
         const venvSource = path.join(process.resourcesPath, 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
         throw_error('Failed to copy Python environment:', error);
+      } finally {
+        win.webContents.send('block-ui', false);
       }
     } else {
       console.log("Venv found")
@@ -223,6 +226,10 @@ try {
 /// ------------------------------------  ///
 ///         ELECTRON CONFIGURATION        /// 
 /// ------------------------------------  ///
+
+// Enable high DPI support
+app.commandLine.appendSwitch('high-dpi-support', '1');
+app.commandLine.appendSwitch('force-device-scale-factor', '1');
 
 // Function to create the tray icon
 function createTrayIcon() {
@@ -383,24 +390,17 @@ app.on('ready', () => {
 });
 
 autoUpdater.on('update-available', () => {
+  win.webContents.send('block-ui', true);
   dialog.showMessageBox({
     type: 'info',
-    title: 'Update available',
-    message: "A new version is available. It's downloading... (You can close the message)",
+    title: 'Update Available',
+    message: "A new version of the application is available and is currently being downloaded. Please wait until the download is complete. The app will remain unresponsive during this process.",
   });
   autoUpdater.downloadUpdate();
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-
-  // Force scripts update
-  fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
-
-  fs.copyFileSync(
-    path.join(ASAR_PATH, 'src', 'templates', 'empty-template.flp'),
-    EMPTY_FLP_PATH
-  );
-
+  win.webContents.send('block-ui', false);
   dialog.showMessageBox({
     type: 'info',
     title: 'Update ready',
