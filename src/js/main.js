@@ -126,7 +126,10 @@ function checkVenv() {
       try {
         win.webContents.send('block-ui', true);
         fs.mkdirSync(venvTarget, { recursive: true });
-        const venvSource = path.join(app.getAppPath(), 'venv');
+        // Use process.resourcesPath to access the unpacked extraResources folder.
+        const venvSource = process.resourcesPath 
+          ? path.join(process.resourcesPath, 'venv')
+          : path.join(app.getAppPath(), 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
         console.log(error);
