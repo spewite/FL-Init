@@ -1,6 +1,8 @@
-# Venv
+# Python
 venv/
-python-embed/
+python-embed/Lib
+python-embed/Scripts
+python-embed/share
 
 # Logs
 logs
