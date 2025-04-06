@@ -11,16 +11,16 @@
 Function CopyVenvToUserData
   ; Destination folder: %APPDATA%\flinit\venv
   StrCpy $0 "$APPDATA\flinit\venv"
-  MessageBox MB_OK "Debug: Destination folder is $0"
+  MessageBox MB_OK "Copying venv to $0"  ; new messagebox for debugging
   CreateDirectory "$0"
-  ; Define source folder variable for debugging
-  StrCpy $2 "$INSTDIR\venv\*"
-  MessageBox MB_OK "Debug: Source folder is $2"
-  nsExec::ExecToLog 'xcopy "$INSTDIR\venv\*" "$0\" /E /I /Y'
+  ; Use the correct source path from the resources folder
+  StrCpy $2 "$INSTDIR\resources\venv\*"
+  MessageBox MB_OK "Copying from $2"  ; new messagebox for debugging
+  nsExec::ExecToLog 'xcopy "$2" "$0\" /E /I /Y'
   Pop $1  ; Exit code from xcopy
   DetailPrint "xcopy exit code: $1"
   StrCmp $1 "0" 0 +3
-    DetailPrint "Venv copied successfully."
+    MessageBox MB_OK "Venv copied successfully."
     goto endCopy
   MessageBox MB_OK "Error copying venv folder."
   goto endCopy
