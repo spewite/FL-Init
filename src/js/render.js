@@ -451,6 +451,13 @@ ipcRenderer.on('python-script-output', (event, data) => {
   insertPythonOutput(text, UUID, textColor);
 });
 
+ipcRenderer.on('block-ui', (event, shouldBlock) => {
+  const loadingScreen = document.getElementById('loading-screen');
+  if (loadingScreen) {
+    loadingScreen.style.display = (shouldBlock ? 'block' : 'none');
+  }
+});
+
 /// ----------------------  ///
 ///        UTILITIES        /// 
 /// ----------------------  ///
