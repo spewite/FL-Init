@@ -103,7 +103,7 @@ function installFFmpeg() {
     console.log('FFmpeg installed correctly.');
   } catch (error) {
     console.error('Error installing FFmpeg:', error);
-    throw_error('Error installing FFmpeg:', error);
+    throwError('Error installing FFmpeg:', error);
   }
 }
 
@@ -131,7 +131,7 @@ function checkVenv() {
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
         console.log(error)
-        throw_error('Failed to copy Python environment: ' + error);
+        throwError('Failed to copy Python environment: ' + error);
       } finally {
         win.webContents.send('block-ui', false);
       }
@@ -183,7 +183,7 @@ try {
   }
 } catch (error) {
   console.error('Error creating directories: ', error);
-  throw_error(error);
+  throwError(error);
 }
 
 /// -----------  ARCHIVOS -----------  ///
@@ -220,7 +220,7 @@ try {
   }
 } catch (error) {
   console.error('Error copying files: ', error);
-  throw_error(error);
+  throwError(error);
 }
 
 
@@ -410,7 +410,7 @@ autoUpdater.on('update-downloaded', (info) => {
 autoUpdater.on('error', (error) => {
   log.error('Error in the auto-updater:', error);
   console.error('Error details:', error);
-  throw_error('Error in the auto-updater: ' + (error.stack || error));
+  throwError('Error in the auto-updater: ' + (error.stack || error));
 });
 
 // Send the application version when requested by the renderer
@@ -469,7 +469,7 @@ ipcMain.on('get-configuration', async () => {
     const config = await getConfiguration();
     win.webContents.send('get-configuration', config);
   } catch (error)  {
-      throw_error(error);
+      throwError(error);
   }
 });
 
@@ -488,7 +488,7 @@ async function changeConfig() {
     const config = await getConfiguration();
     win.webContents.send('show-modal', config);
   } catch (error)  {
-      throw_error(error);
+      throwError(error);
   }
 
 }
@@ -498,7 +498,7 @@ ipcMain.on('change-config', (event, JSON_Config) => {
   fs.readFile(CONFIG_PATH, 'utf8', (err) => {
 
     if (err) {
-      throw_error('Error reading configuration file: ' + err);
+      throwError('Error reading configuration file: ' + err);
       return;
     }
   
@@ -511,7 +511,7 @@ ipcMain.on('change-config', (event, JSON_Config) => {
       event.sender.send('config-saved', { jsonConfig: jsonConfig });
 
     } catch (fileSaveError) {
-      throw_error('Error saving new configuration JSON: ' + fileSaveError);
+      throwError('Error saving new configuration JSON: ' + fileSaveError);
     }
   });
 
@@ -522,7 +522,7 @@ ipcMain.on('save-stems-value', (event, separateStems) => {
   fs.readFile(CONFIG_PATH, 'utf8', async (err) => {
     
     if (err) {
-      throw_error('Error reading configuration file: ' + err);
+      throwError('Error reading configuration file: ' + err);
       return;
     }
 
@@ -532,7 +532,7 @@ ipcMain.on('save-stems-value', (event, separateStems) => {
       const newConfig = JSON.stringify({...currentConfig, "separate_stems": separateStems}, null, 2); 
       fs.writeFileSync(CONFIG_PATH, newConfig);
     } catch (fileSaveError) {
-      throw_error('Error saving new configuration JSON: ' + fileSaveError);
+      throwError('Error saving new configuration JSON: ' + fileSaveError);
     }
   });
 })
@@ -699,7 +699,7 @@ function clientLog(...args) {
   }
 }
 
-function throw_error(err)
+function throwError(err)
 {
   if (win && !win.isDestroyed()) {
     win.webContents.send('generic-error', err);
@@ -731,6 +731,6 @@ ipcMain.on('ask-templates-list', async (event) => {
     });
     
   } catch (error) {
-    throw_error(error.message);
+    throwError(error.message);
   }
 });
