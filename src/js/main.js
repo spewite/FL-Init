@@ -111,52 +111,18 @@ function installFFmpeg() {
 ///          VENV           /// 
 /// ----------------------  ///
 
-const venvPath = process.env.NODE_ENV === 'development'
-? path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe') // Dev path
-: path.join(app.getPath('userData'), 'venv', 'Scripts', 'python.exe'); // Production path
+// Modified venvPath: always use installation path
+const venvPath = path.join(app.getAppPath(), 'venv', 'Scripts', 'python.exe'); // Use installation path for venv
 
+// Simplified checkVenv function
 function checkVenv() {
-  if (process.env.NODE_ENV !== 'development') {
-    const venvTarget = path.join(app.getPath('userData'), 'venv');
-    const pythonExecutable = path.join(venvTarget, 'Scripts', 'python.exe');
-
-    if (!fs.existsSync(pythonExecutable)) {
-      console.log('Copying Python virtual environment for production...');
-      
-      try {
-        win.webContents.send('block-ui', true);
-        fs.mkdirSync(venvTarget, { recursive: true });
-        // Use process.resourcesPath to access the unpacked extraResources folder.
-        const venvSource = process.resourcesPath 
-          ? path.join(process.resourcesPath, 'venv')
-          : path.join(app.getAppPath(), 'venv');
-        copyFolderRecursiveSync(venvSource, venvTarget);
-      } catch (error) {
-        console.log(error);
-        throwError('Failed to copy Python environment: ' + error);
-      } finally {
-        win.webContents.send('block-ui', false);
-      }
-    } else {
-      console.log("Venv found");
-    }
+  clientLog("VenvPath: " + venvPath)
+  if (!fs.existsSync(venvPath)) {
+    console.error('Python virtual environment not found at installation path:', venvPath);
+    throwError('Python virtual environment not found.');
+  } else {
+    console.log("Virtual environment found at installation path.");
   }
-}
-
-// Add this helper function
-function copyFolderRecursiveSync(source, target) {
-  if (!fs.existsSync(target)) fs.mkdirSync(target);
-  
-  fs.readdirSync(source).forEach(item => {
-    const srcPath = path.join(source, item);
-    const tgtPath = path.join(target, item);
-    
-    if (fs.lstatSync(srcPath).isDirectory()) {
-      copyFolderRecursiveSync(srcPath, tgtPath);
-    } else {
-      fs.copyFileSync(srcPath, tgtPath);
-    }
-  });
 }
 
 /// ------------------------------  ///
