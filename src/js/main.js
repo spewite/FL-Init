@@ -130,7 +130,8 @@ function checkVenv() {
         const venvSource = path.join(process.resourcesPath, 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
-        throw_error('Failed to copy Python environment:', error);
+        console.log(error)
+        throw_error('Failed to copy Python environment: ' + error);
       } finally {
         win.webContents.send('block-ui', false);
       }
