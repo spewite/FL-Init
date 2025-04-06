@@ -1,4 +1,4 @@
 - Block app while updating
-- Remove the outline from twitter logo
 - Check DPI Aware
 - No se copia los archivos a APPDATA
+- Look if the venv can be copied into APPDATA in the installation process, and if not, create a loading screen.
