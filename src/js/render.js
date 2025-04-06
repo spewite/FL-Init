@@ -8,7 +8,7 @@ const changeEvent = new Event('change'); // Manually trigger the change event
 const darkThemeOptions = {
   background: '#1e1e1e',
   color: '#ffffff',
-  confirmButtonColor: '#3085d6',
+  confirmButtonColor: '#d9b063',
   cancelButtonColor: '#d33',
 };
 
