@@ -1,6 +1,6 @@
 
 /// ------------------------------------  ///
-///           VARIABLES GLOBALES          /// 
+///             GLOBAL VARIABLES          /// 
 /// ------------------------------------  ///
 
 const { app, BrowserWindow, ipcMain, dialog, Menu, Tray } = require('electron');
@@ -9,16 +9,13 @@ const fs = require('fs');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
-const { ESTADOS_SALIDA } = require('../js/constants');
+const { OUTPUT_STATES } = require('../js/constants');
 
 let win;
 let tray = null;
 let pythonProcess = null;
 let isProcessRunning = false;
 let isRestoringWindow = false;
-
-// Fix blurryness (DPI Awareness)
-app.disableHardwareAcceleration();
 
 /// -----------------------  ///
 ///      SINGLE INSTANCE     /// 
@@ -43,20 +40,21 @@ if (!gotLock) {
 /// -----------------  ///
 
 app.on('before-quit', () => {
-  // Matar cualquier proceso residual
+
+  // Kill all the residual process
   if (pythonProcess) {
     pythonProcess.kill('SIGTERM');
     pythonProcess = null;
   }
   
-  // Limpiar listeners
+  // Clear listeners
   if (win && !win.isDestroyed()) {
     win.removeAllListeners();
   }
 });
 
 /// -------------------------------------  ///
-///      INSTALAR FFMPEG SI NO LO ESTA     /// 
+///      INSTALL FFMPEG IF NOT INSTALLED   /// 
 /// -------------------------------------  ///
 
 // Paths for FFmpeg
@@ -66,10 +64,10 @@ const FFmpegBinary = path.join(FFmpegPath, 'ffmpeg.exe');
 // Function to check if FFmpeg is installed
 function checkFFmpeg() {
   if (!fs.existsSync(FFmpegBinary)) {
-    console.log('FFmpeg no esta instalado, procediendo a la instalacion...');
+    console.log('FFmpeg is not installed, proceeding with the installation...');
     installFFmpeg();
   } else {
-    console.log('FFmpeg esta instalado.');
+    console.log('FFmpeg is installed.');
   }
 }
 
@@ -82,14 +80,14 @@ function installFFmpeg() {
   console.log('FFmpegPath:', FFmpegPath);
 
   try {
-    // Verificar que la carpeta fuente existe
+    // Check if the source folder exists
     if (!fs.existsSync(ffmpegSource)) {
       throw new Error(`The FFmpeg source directory does not exist: ${ffmpegSource}`);
     }
     
     fs.mkdirSync(FFmpegPath, { recursive: true });
 
-    // Verificar que los archivos existen antes de copiarlos
+    // Check if the files exist before copying
     const files = ['ffmpeg.exe', 'ffplay.exe', 'ffprobe.exe'];
     for (const file of files) {
       const sourcePath = path.join(ffmpegSource, file);
@@ -102,10 +100,10 @@ function installFFmpeg() {
     fs.copyFileSync(path.join(ffmpegSource, 'ffplay.exe'), path.join(FFmpegPath, 'ffplay.exe'));
     fs.copyFileSync(path.join(ffmpegSource, 'ffprobe.exe'), path.join(FFmpegPath, 'ffprobe.exe'));
 
-    console.log('FFmpeg instalado correctamente.');
+    console.log('FFmpeg installed correctly.');
   } catch (error) {
     console.error('Error installing FFmpeg:', error);
-    lanzar_error('Error installing FFmpeg:', error);
+    throw_error('Error installing FFmpeg:', error);
   }
 }
 
@@ -131,7 +129,7 @@ function checkVenv() {
         const venvSource = path.join(process.resourcesPath, 'venv');
         copyFolderRecursiveSync(venvSource, venvTarget);
       } catch (error) {
-        lanzar_error('Failed to copy Python environment:', error);
+        throw_error('Failed to copy Python environment:', error);
       }
     } else {
       console.log("Venv found")
@@ -155,9 +153,9 @@ function copyFolderRecursiveSync(source, target) {
   });
 }
 
-/// ------------------------------------  ///
-///       GUARDAR ARCHIVOS EN APPDATA     /// 
-/// ------------------------------------  ///
+/// ------------------------------  ///
+///       SAVE FILES IN APPDATA     /// 
+/// ------------------------------  ///
 
 /// -----------  DIRECTORIOS -----------  ///
 
@@ -180,8 +178,8 @@ try {
     fs.mkdirSync(ICONS_PATH);
   }
 } catch (error) {
-  console.error('Error creando directorios:', error);
-  lanzar_error(error);
+  console.error('Error creating directories: ', error);
+  throw_error(error);
 }
 
 /// -----------  ARCHIVOS -----------  ///
@@ -189,16 +187,16 @@ try {
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 
 const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Ruta para desarrollo
-  : path.join(SCRIPTS_PATH, 'script_python.py'); // Ruta para producción
+  ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Dev path
+  : path.join(SCRIPTS_PATH, 'script_python.py'); // Production path
 
 const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'icons', 'icon.png') // Ruta para desarrollo
-  : path.join(ICONS_PATH, 'icon.png'); // Ruta para producción
+  ? path.join(app.getAppPath(), 'icons', 'icon.png') // Dev path
+  : path.join(ICONS_PATH, 'icon.png'); // Production path
 
 const EMPTY_FLP_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'src', 'templates', 'empty-template.flp') // Ruta desarrollo
-  : path.join(SCRIPTS_PATH, 'empty-template.flp'); // Ruta producción
+  ? path.join(app.getAppPath(), 'src', 'templates', 'empty-template.flp') // Dev path
+  : path.join(SCRIPTS_PATH, 'empty-template.flp'); // Production path
 
 try {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -217,21 +215,21 @@ try {
     );
   }
 } catch (error) {
-  console.error('Error copiando archivos:', error);
-  lanzar_error(error);
+  console.error('Error copying files: ', error);
+  throw_error(error);
 }
 
 
 /// ------------------------------------  ///
-///         CONFIGURACIÓN ELECTRON        /// 
+///         ELECTRON CONFIGURATION        /// 
 /// ------------------------------------  ///
 
-// Función para crear el ícono en la bandeja
-function crearTrayIcon() {
+// Function to create the tray icon
+function createTrayIcon() {
   if (!tray) {
     tray = new Tray(PNG_ICON_PATH);
     
-    // Evento para clic izquierdo
+    // Left click event
     tray.on('click', () => {
       isRestoringWindow = true;
       if (win) {
@@ -240,7 +238,7 @@ function crearTrayIcon() {
       }
     });
 
-    // Menú contextual para clic derecho
+    // Contextual menu for right click
     const contextMenu = Menu.buildFromTemplate([
       { 
         label: 'Open', 
@@ -276,13 +274,13 @@ function createWindow() {
   
   win.loadFile(path.join(__dirname, '../html/index.html'));
 
-  // Maximizar la ventana después de crearla
+  // Maximize window after creating
   win.maximize();
 
-  // Abrir DevTools automáticamente
-  win.webContents.openDevTools();
+  // // Open DevTools automatically
+  // win.webContents.openDevTools();
 
-  // Modifica el evento close de la ventana
+  // Modify window close event
   win.on('close', (event) => {
     if (isRestoringWindow) {
       event.preventDefault();
@@ -292,7 +290,8 @@ function createWindow() {
   
     if (!app.isQuitting) {
       if (isProcessRunning) {
-        // Mostrar diálogo solo si hay proceso activo
+
+        // Show dialog if the download/separation process is active
         const choice = dialog.showMessageBoxSync(win, {
           type: 'question',
           buttons: ['Send to Background', 'Quit Anyway'],
@@ -310,7 +309,7 @@ function createWindow() {
         } else { // Send to Background
           event.preventDefault();
           win.hide();
-          crearTrayIcon();
+          createTrayIcon();
         }
       } else {
         // Regular close
@@ -322,12 +321,11 @@ function createWindow() {
     }
   });
   
-
   const menu = Menu.buildFromTemplate([
     {
       label: 'Settings',
       submenu: [
-        { label: 'Configuration', click() { cambiar_config(); } },
+        { label: 'Configuration', click() { changeConfig(); } },
       ]
     },
     {
@@ -359,12 +357,12 @@ app.whenReady().then(() => {
       win.show();
       if (process.platform === 'darwin') app.dock.show();
     } else {
-      // Si no existe, crear una nueva ventana
+      // If does't exist create a window.
       createWindow();
     }
   });
   
-  // Verificar actualizaciones al iniciar la aplicación
+  // Check updates when opening app
   autoUpdater.checkForUpdates();
 
 });
@@ -375,10 +373,9 @@ app.on('window-all-closed', () => {
   }
 });
 
-
-/// ------------------------------------  ///
-///            ACTUALIZACIONES            /// 
-/// ------------------------------------  ///
+/// ----------------------------  ///
+///            UPDATES            /// 
+/// ----------------------------  ///
 
 app.on('ready', () => {
   autoUpdater.autoDownload = false;
@@ -396,7 +393,7 @@ autoUpdater.on('update-available', () => {
 
 autoUpdater.on('update-downloaded', (info) => {
 
-  // Forzar actualización de scripts
+  // Force scripts update
   fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
 
   fs.copyFileSync(
@@ -416,27 +413,27 @@ autoUpdater.on('update-downloaded', (info) => {
 autoUpdater.on('error', (error) => {
   log.error('Error in the auto-updater:', error);
   console.error('Error details:', error);
-  lanzar_error('Error in the auto-updater: ' + (error.stack || error));
+  throw_error('Error in the auto-updater: ' + (error.stack || error));
 });
 
-// Enviar la versión de la aplicación cuando el renderizador lo solicite
+// Send the application version when requested by the renderer
 ipcMain.handle('get-app-version', async () => {
   return app.getVersion();
 });
 
-/// ------------------------------------  ///
-///              VALIDACIONES             /// 
-/// ------------------------------------  ///
+/// ----------------------------------  ///
+///              VALIDATION             /// 
+/// ----------------------------------  ///
 
-ipcMain.on('validate-directory', (event, ruta) => {
+ipcMain.on('validate-directory', (event, pathToValidate) => {
 
-  fs.stat(ruta, (err, stats) => {
+  fs.stat(pathToValidate, (err, stats) => {
 
     const response = { success: true, errorMessage: '' };
 
     if (err || !stats.isDirectory()) {
       response.success = false;
-      response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${ruta}</span> does not exist!</p>`;
+      response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> does not exist!</p>`;
     }
     
     event.reply('validate-directory', response);
@@ -448,16 +445,16 @@ ipcMain.on('validate-directory', (event, ruta) => {
 
 ipcMain.on('validate-project-name', (event, data) => {
 
-  const { ruta, directorio } = data;
-  const rutaParaValidar = path.join(ruta, directorio);
+  const { projectPath, directory } = data;
+  const pathToValidate = path.join(projectPath, directory);
   
-  fs.access(rutaParaValidar, fs.constants.F_OK, (err) => {
+  fs.access(pathToValidate, fs.constants.F_OK, (err) => {
     
     const response = { success: true, errorMessage: '' };
 
     if (!err) {
       response.success = false;
-      response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${rutaParaValidar}</span> already exists!</p>`;
+      response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> already exists!</p>`;
     }
 
     event.reply('validate-project-name', response);
@@ -465,60 +462,59 @@ ipcMain.on('validate-project-name', (event, data) => {
 
 });
 
-/// ------------------------------------  ///
-///          OBTENER CONFIGURACION        /// 
-/// ------------------------------------  ///
+/// --------------------------------  ///
+///          GET CONFIGURATION        /// 
+/// --------------------------------  ///
 
-ipcMain.on('obtener-configuracion', async () => {
+ipcMain.on('get-configuration', async () => {
 
   try  {
-    const config = await obtener_configuracion();
-    win.webContents.send('obtener-configuracion', config);
+    const config = await getConfiguration();
+    win.webContents.send('get-configuration', config);
   } catch (error)  {
-      lanzar_error(error);
+      throw_error(error);
   }
 });
 
-// Usar fs.promises para consistencia
-async function obtener_configuracion() {
+async function getConfiguration() {
   const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
   return JSON.parse(data);
 }
 
-/// ------------------------------------  ///
-///          CAMBIAR CONFIGURACION        /// 
-/// ------------------------------------  ///
+/// -----------------------------------  ///
+///          CHANGE CONFIGURATION        /// 
+/// -----------------------------------  ///
 
-async function cambiar_config() {
+async function changeConfig() {
 
   try {
-    const config = await obtener_configuracion();
-    win.webContents.send('mostrar-modal', config);
+    const config = await getConfiguration();
+    win.webContents.send('show-modal', config);
   } catch (error)  {
-      lanzar_error(error);
+      throw_error(error);
   }
 
 }
 
-ipcMain.on('cambiar-config-valores', (event, JSON_Config) => {
+ipcMain.on('change-config', (event, JSON_Config) => {
 
   fs.readFile(CONFIG_PATH, 'utf8', (err) => {
 
     if (err) {
-      lanzar_error('Error reading configuration file: ' + err);
+      throw_error('Error reading configuration file: ' + err);
       return;
     }
   
-    // Guardar la configuracion en el archivo de configuracion.
+    // Save configuration in file 
     try {
       const jsonConfig = JSON.stringify(JSON_Config, null, 2);
       fs.writeFileSync(CONFIG_PATH, jsonConfig);
 
-      // Notificar al frontend que la configuración se guardó con éxito
-      event.sender.send('configuracion-guardada', { jsonConfig: jsonConfig });
+      // Notify the frontend that the configuration was successfully saved
+      event.sender.send('config-saved', { jsonConfig: jsonConfig });
 
     } catch (fileSaveError) {
-      lanzar_error('Error saving new configuration JSON: ' + fileSaveError);
+      throw_error('Error saving new configuration JSON: ' + fileSaveError);
     }
   });
 
@@ -529,17 +525,17 @@ ipcMain.on('save-stems-value', (event, separateStems) => {
   fs.readFile(CONFIG_PATH, 'utf8', async (err) => {
     
     if (err) {
-      lanzar_error('Error reading configuration file: ' + err);
+      throw_error('Error reading configuration file: ' + err);
       return;
     }
-  
-    // Guardar la configuracion en el archivo de configuracion.
+
+    // Save the configuration in the configuration file.
     try {
-      const currentConfig = await obtener_configuracion();
+      const currentConfig = await getConfiguration();
       const newConfig = JSON.stringify({...currentConfig, "separate_stems": separateStems}, null, 2); 
       fs.writeFileSync(CONFIG_PATH, newConfig);
     } catch (fileSaveError) {
-      lanzar_error('Error saving new configuration JSON: ' + fileSaveError);
+      throw_error('Error saving new configuration JSON: ' + fileSaveError);
     }
   });
 })
@@ -548,7 +544,7 @@ ipcMain.on('save-stems-value', (event, separateStems) => {
 ///       OPEN FILE/DIRECTORY DIALOG      ///
 /// ------------------------------------  ///
 
-// Manejo de IPC para abrir el diálogo de selección de archivos
+// IPC handling to open the folder selection dialog
 ipcMain.on('open-directory-dialog', (event, input_id) => {
 
   dialog.showOpenDialog({
@@ -557,21 +553,19 @@ ipcMain.on('open-directory-dialog', (event, input_id) => {
 
     if (!result.canceled && result.filePaths.length > 0) {
 
-      const retorno = {
-        path: result.filePaths[0],
+      event.sender.send('selected-directory', {
+        directoryPath: result.filePaths[0],
         input_id: input_id
-      } 
-
-      event.sender.send('selected-directory', retorno);
+      });
     }
 
   }).catch(err => {
-    console.error('Error al abrir el diálogo de selección de directorio:', err);
+    console.error('Error opening the directory selection dialog:', err);
   });
 
 });
 
-// Manejo de IPC para abrir el diálogo de selección de archivos
+// IPC handling to open the file selection dialog
 ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
   dialog.showOpenDialog({
@@ -583,7 +577,7 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
       event.sender.send('selected-file', result.filePaths[0]);
     }
   }).catch(err => {
-    console.error('Error al abrir el diálogo de selección de directorio:', err);
+    console.error('Error opening the file selection dialog:', err);
   });
 
 });
@@ -594,14 +588,6 @@ ipcMain.on('open-file-dialog', (event, extensionsArray) => {
 
 function hasTemplatePath(args) {
   return args.some(arg => arg.includes('--template-path'));
-}
-
-function copyEmtpyFLP(dest) {
-  try {
-    fs.copyFileSync(EMPTY_FLP_PATH, dest);
-  } catch (error) {
-    lanzar_error('Error copying empty template: ' + error.message);
-  }
 }
 
 ipcMain.on('run-python-script', (event, input) => {
@@ -619,18 +605,16 @@ ipcMain.on('run-python-script', (event, input) => {
     args.push('--template-path=' + EMPTY_FLP_PATH);
   }
 
-  console.log(args)
-
   pythonProcess = spawn(venvPath, [PYTHON_SCRIPT_PATH, ...args]);
 
-  // Función segura para enviar mensajes
+  // Secure function to send messages
   const safeSend = (message) => {
-    if (!win.isDestroyed()) { // Verificar si la ventana existe
-      event.sender.send('python-script-salida', message);
+    if (!win.isDestroyed()) { // Check if the window exists
+      event.sender.send('python-script-output', message);
     }
   };
 
-  // Limpieza mejorada
+  // Cleanup the python process
   const cleanup = () => {
     isProcessRunning = false;
     if (pythonProcess) {
@@ -642,21 +626,21 @@ ipcMain.on('run-python-script', (event, input) => {
   pythonProcess.stdout.on('data', (data) => {
 
     let message = {
-      texto: data.toString(),
+      text: data.toString(),
       UUID: UUID,
       status: undefined
     }
     
-    let {texto} = message
-    texto = texto.toLowerCase();
+    let {text} = message
+    text = text.toLowerCase();
 
-    if (texto.includes('error')) {
-      message.status = ESTADOS_SALIDA.ERROR;
-    } else if (texto.includes('%'))  {
-      message.status = ESTADOS_SALIDA.INFO;
+    if (text.includes('error')) {
+      message.status = OUTPUT_STATES.ERROR;
+    } else if (text.includes('%'))  {
+      message.status = OUTPUT_STATES.INFO;
     } else 
     {
-      message.status = ESTADOS_SALIDA.SUCCESS;
+      message.status = OUTPUT_STATES.SUCCESS;
     }
 
     safeSend(message);
@@ -665,9 +649,9 @@ ipcMain.on('run-python-script', (event, input) => {
   pythonProcess.stderr.on('data', (data) => {
 
     let message = {
-      texto: data.toString(),
+      text: data.toString(),
       UUID: UUID,
-      status: ESTADOS_SALIDA.ERROR
+      status: OUTPUT_STATES.ERROR
     }
 
     safeSend(message);
@@ -675,22 +659,21 @@ ipcMain.on('run-python-script', (event, input) => {
 
   pythonProcess.on('close', (code) => {
 
-    console.log(`Proceso terminado con código ${code}`);
-
+    console.log(`Process finished with code ${code}`);
     cleanup();
 
     let message = {
-      texto: undefined,
+      text: undefined,
       UUID: UUID,
       status: undefined
     }
 
     if (code === 0) {
-      message.texto = "Script completed successfully"
-      message.status = ESTADOS_SALIDA.SUCCESS
+      message.text = "Script completed successfully"
+      message.status = OUTPUT_STATES.SUCCESS
     } else {
-      message.texto = `Script terminated with error code: ${code}`
-      message.status = ESTADOS_SALIDA.ERROR
+      message.text = `Script terminated with error code: ${code}`
+      message.status = OUTPUT_STATES.ERROR
     }
 
     safeSend(message);
@@ -698,9 +681,9 @@ ipcMain.on('run-python-script', (event, input) => {
 
   pythonProcess.on('error', (error) => {
     const message = {
-      texto: `Error executing script: ${error.message}`,
+      text: `Error executing script: ${error.message}`,
       UUID: UUID,
-      status: ESTADOS_SALIDA.ERROR
+      status: OUTPUT_STATES.ERROR
     };
     safeSend(message);
   });
@@ -708,9 +691,9 @@ ipcMain.on('run-python-script', (event, input) => {
 });
 
 
-/// ------------------------------------  ///
-///               UTILIDADES              ///
-/// ------------------------------------  ///
+/// -----------------------------------  ///
+///               UTILITIES              ///
+/// -----------------------------------  ///
 
 function clientLog(...args) {
   if (win && !win.isDestroyed()) {
@@ -719,41 +702,38 @@ function clientLog(...args) {
   }
 }
 
-function lanzar_error(err)
+function throw_error(err)
 {
-  if (win && !win.isDestroyed()) { // <-- Verificación crítica
-    win.webContents.send('error-generico', err);
+  if (win && !win.isDestroyed()) {
+    win.webContents.send('generic-error', err);
   }
-  console.log("\x1b[43m", err);  // Colores: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
-  console.log("\x1b[0m", '');    // Resetear
+  console.log("\x1b[43m", err);  // Colors: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
+  console.log("\x1b[0m", '');    // Reset
 }
 
-ipcMain.on('pedir-lista-plantillas', async (event) => {
+ipcMain.on('ask-templates-list', async (event) => {
   try {
-    const JSON_Config = await obtener_configuracion();
-    const rutaPlantillas = JSON_Config["ruta_plantillas"];
+    const JSON_Config = await getConfiguration();
+    const templatesPath = JSON_Config["templates_path"];
 
-    // Verificar si la ruta es correcta
-    if (!fs.existsSync(rutaPlantillas)) { 
-      console.log("No existe la ruta de la plantillas"); // No queremos mostar mensaje en pantalla solo en terminal.
+    // Check if the path exists
+    if (!fs.existsSync(templatesPath)) { 
+      console.log("The templates path does not exist"); // We don't want to display a message on the screen, only in the terminal.
       return;
     }
 
-    // Crear un array con las rutas de todos los archivos .flp.
-    const archivos = fs.readdirSync(rutaPlantillas).filter(file => path.extname(file).toLowerCase() === '.flp');
+    // Create an array with the paths of all .flp files.
+    const files = fs.readdirSync(templatesPath).filter(file => path.extname(file).toLowerCase() === '.flp');
 
-    // Crear un array con las rutas completas de los archivos
-    const rutasArchivos = archivos.map(file => path.join(rutaPlantillas, file));
+    // Create an array with the full paths of the files
+    const filesPaths = files.map(file => path.join(templatesPath, file));
 
-    // Crear el objeto a devolver
-    const resultado = {
-      rutasArchivos: rutasArchivos
-    };
-
-    // Enviar el objeto de vuelta al renderer
-    event.sender.send('obtener-lista-plantillas', resultado);
+    // Send the object back to the renderer
+    event.sender.send('get-templates-list', {
+      filesPaths: filesPaths
+    });
     
   } catch (error) {
-    lanzar_error(error.message);
+    throw_error(error.message);
   }
 });
