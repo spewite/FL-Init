@@ -30,7 +30,7 @@ original_stderr = None
 
 def output_message(mesage, error=False):
     output_channel = sys.stderr if error else sys.stdout
-    print(mesage, file=output_channel)
+    print(f"\n{mesage}", file=output_channel)
     sys.stdout.flush()
 
 def is_video_valid():
@@ -131,7 +131,7 @@ def download_video():
 
         # Verify if the stems separation checkbox is checked
         if separate_stems: 
-            output_message("\nThe project has been created. The stem extraction process has just begun. ")
+            output_message("The project has been created. The stem extraction process has just begun. ")
             output_message("To see the progress, check the terminal. If you want, you can create another project in the meantime (it will slow down the previous one).")
             separate_audio(assets_path, mp3_path)
         else: 
@@ -244,11 +244,11 @@ def get_song_bpm(file_path):
     return bpm
 
 def show_parameters():
-    output_message(f'Url: {url} \n')
-    output_message(f'Proyect Location: {project_location} \n')
-    output_message(f'Proyect Name: {project_name} \n')
-    output_message(f'Separate stems: {separate_stems} \n')
-    output_message(f'Template Path: {template_path} \n')
+    output_message(f'Url: {url}')
+    output_message(f'Proyect Location: {project_location}')
+    output_message(f'Proyect Name: {project_name}')
+    output_message(f'Separate stems: {separate_stems}')
+    output_message(f'Template Path: {template_path}')
 
 def main(args):
 
