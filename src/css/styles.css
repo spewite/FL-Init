@@ -541,3 +541,15 @@ input:checked + .slider:before {
   outline: none;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+#advanced-toggle {
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0px !important;
+}
+
+#advanced-toggle i {
+  margin-left: 5px;
+  transition: all .3s;
+}
