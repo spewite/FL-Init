@@ -47,19 +47,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (advancedToggle && advancedOptionsContent) {
       // Ensure advanced options content is hidden by default.
       advancedOptionsContent.style.display = 'none';
+      const icon = advancedToggle.querySelector("i");
+      if (icon) {
+        // Set up initial transition for the icon
+        icon.style.transition = "transform 0.3s ease";
+      }
       advancedToggle.addEventListener("click", () => {
-        const icon = advancedToggle.querySelector("i");
         if (advancedOptionsContent.style.display === 'none' || advancedOptionsContent.style.display === '') {
           advancedOptionsContent.style.display = 'block';
           if (icon) {
-            icon.classList.remove("fa-chevron-down");
-            icon.classList.add("fa-chevron-up");
+            icon.style.transform = "rotate(180deg)";
           }
         } else {
           advancedOptionsContent.style.display = 'none';
           if (icon) {
-            icon.classList.remove("fa-chevron-up");
-            icon.classList.add("fa-chevron-down");
+            icon.style.transform = "rotate(0deg)";
           }
         }
       });
