@@ -39,7 +39,32 @@ function updateStemOptionsVisibility() {
 }
 
 // Set the initial state (in case configuration remembers the value)
-document.addEventListener("DOMContentLoaded", updateStemOptionsVisibility);
+document.addEventListener("DOMContentLoaded", () => {
+    updateStemOptionsVisibility();
+
+    const advancedToggle = document.getElementById("advanced-toggle");
+    const advancedOptionsContent = document.getElementById("advanced-options-content");
+    if (advancedToggle && advancedOptionsContent) {
+      // Ensure advanced options content is hidden by default.
+      advancedOptionsContent.style.display = 'none';
+      advancedToggle.addEventListener("click", () => {
+        const icon = advancedToggle.querySelector("i");
+        if (advancedOptionsContent.style.display === 'none' || advancedOptionsContent.style.display === '') {
+          advancedOptionsContent.style.display = 'block';
+          if (icon) {
+            icon.classList.remove("fa-chevron-down");
+            icon.classList.add("fa-chevron-up");
+          }
+        } else {
+          advancedOptionsContent.style.display = 'none';
+          if (icon) {
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+          }
+        }
+      });
+    }
+});
 inputSeparateStems.addEventListener("change", updateStemOptionsVisibility);
 
 // -----  MODAL ---- //
