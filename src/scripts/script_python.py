@@ -25,7 +25,8 @@ separate_stems = None
 template_path = None
 project_path = None
 youtube_title = None
-
+audio_extension = None
+threads = None
 original_stderr = None
 
 def output_message(mesage, error=False):
@@ -97,7 +98,7 @@ def download_video():
         # Save paths and download object
         audio_stream = yt.streams.filter(only_audio=True).first()
         audio_file_path = audio_stream.download(output_path=assets_path, filename=f"{title}.mp4")
-        mp3_path = os.path.join(assets_path, f'{title}.mp3')
+        audio_out_path = os.path.join(assets_path, f"{title}.{audio_extension}")
 
         # Redirect MoviePy's output to stdout
         global original_stderr 
@@ -107,7 +108,7 @@ def download_video():
         # Download the audio
         audio_clip = AudioFileClip(audio_file_path)
 
-        audio_clip.write_audiofile(mp3_path)
+        audio_clip.write_audiofile(audio_out_path)
         audio_clip.close()
 
         # Restore stderr
@@ -117,8 +118,8 @@ def download_video():
         os.remove(audio_file_path)
         
         # Get key and bpm of the song
-        key = detect_key(mp3_path)
-        bpm = get_song_bpm(mp3_path)
+        key = detect_key(audio_out_path)
+        bpm = get_song_bpm(audio_out_path)
 
         # Create file with original song info
         create_info_file(key, bpm)
@@ -133,7 +134,7 @@ def download_video():
         if separate_stems: 
             output_message("The project has been created. The stem extraction process has just begun. ")
             output_message("To see the progress, check the terminal. If you want, you can create another project in the meantime (it will slow down the previous one).")
-            separate_audio(assets_path, mp3_path)
+            separate_audio(assets_path, audio_out_path)
         else: 
             output_message("The project has been created. You can create another one if you wish.")
 
@@ -159,10 +160,14 @@ def separate_audio(assets_path, audio_path):
 
     # Run demucs with the output path set to stems_base.
     # This will generate a structure: stems_base/mdx_extra/audio_name/(the 4 files)
-    command = f'--verbose -n mdx_extra --jobs 4 --out "{stems_base}" "{audio_path}"'
+    if audio_extension == 'mp3':
+        command = f'--verbose -n mdx_extra --jobs {threads} --mp3 --out "{stems_base}" "{audio_path}"'
+    else:
+        command = f'--verbose -n mdx_extra --jobs {threads} --out "{stems_base}" "{audio_path}"'
     args = shlex.split(command)
 
-    output_message("Stem extraction in progress...")
+    output_message(f"Stem extraction in progress... Threads: {threads}, Extension: {audio_extension}")
+
     sys.stderr = sys.stdout
     demucs.separate.main(args)
     sys.stderr = original_stderr
@@ -241,7 +246,7 @@ def get_song_bpm(file_path):
     # Use np.round instead of round for NumPy values
     bpm = int(np.round(tempo, 0))
     
-    return bpm
+    return bpm - 1 # Rest one unity because always it calculated 1 extra. 161 instead of 160...
 
 def show_parameters():
     output_message(f'Url: {url}')
@@ -267,6 +272,8 @@ def main(args):
     global separate_stems
     global template_path
     global project_path
+    global audio_extension
+    global threads
 
     url = args.url
     project_location = args.project_location
@@ -274,6 +281,8 @@ def main(args):
     separate_stems = args.separate_stems
     template_path = args.template_path
     project_path = os.path.join(project_location, project_name)
+    audio_extension = args.audio_extension   # <-- new parameter
+    threads = args.threads                   # <-- new parameter
     
     # Validate that the project name does not contain characters not allowed by Windows.
     validate_project_name(project_name)
@@ -323,6 +332,9 @@ if __name__ == "__main__":
     parser.add_argument("project_name", help="Project name, used as the directory name")
     parser.add_argument("--separate-stems", action='store_true', help="Indicates whether to separate the audio stems")
     parser.add_argument("--template-path", help="Path to the .flp template to use for the project")
+    # New arguments for audio extension and number of threads
+    parser.add_argument("--audio-extension", choices=['wav', 'mp3'], default='wav', help="Audio output extension (default: wav)")
+    parser.add_argument("--threads", type=int, default=4, help="Number of threads for demucs extraction (default: 4)")
 
     args = parser.parse_args()
     main(args)

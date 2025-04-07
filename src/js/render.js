@@ -28,6 +28,19 @@ const inputProjectName = document.getElementById('project-name');
 // Optional parameters
 const inputSeparateStems = document.getElementById('separate-stems'); 
 const inputTemplatePath = document.getElementById('template-flp');
+const stemOptions = document.getElementById("stems-options");
+
+function updateStemOptionsVisibility() {
+    if (inputSeparateStems.checked) {
+        stemOptions.style.display = 'flex';
+    } else {
+        stemOptions.style.display = 'none';
+    }
+}
+
+// Set the initial state (in case configuration remembers the value)
+document.addEventListener("DOMContentLoaded", updateStemOptionsVisibility);
+inputSeparateStems.addEventListener("change", updateStemOptionsVisibility);
 
 // -----  MODAL ---- //
 const btnModalSave = document.getElementById("modal-save");
@@ -59,7 +72,6 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
   // Load the project path parameter
   ipcRenderer.send("get-configuration");
-
 });
 
 ipcRenderer.on('get-configuration', (event, JSON_Config) => {
@@ -83,8 +95,9 @@ function setupParameters(JSON_Config) {
   // Load templates combo
   loadTemplates();
 
-  // Set the default value of separate stems
+  // Set the default value of separate stems and update the panel visibility
   inputSeparateStems.checked = separate_stems;
+  updateStemOptionsVisibility();
 }
 
 // ----- OPEN LINKS IN BROWSER ---- //
@@ -116,6 +129,16 @@ window.addEventListener("click", (e) => {
 inputSeparateStems.addEventListener("change", () => {
   saveStemsValue();
 })
+
+// Toggle the display of stems options when 'Separate stems' is changed.
+inputSeparateStems.addEventListener("change", () => {
+  const stemsOptions = document.getElementById("stems-options");
+  if (inputSeparateStems.checked) {
+    stemsOptions.style.display = 'flex';
+  } else {
+    stemsOptions.style.display = 'none';
+  }
+});
 
 // ----- VALID URL VALIDATION ---- //
 inputYoutubeUrl.addEventListener("change", () => {
@@ -268,6 +291,15 @@ document.getElementById('form').addEventListener('submit', function(event) {
 
   if (templatePath) {
     args.push(`--template-path=${templatePath}`);
+  }
+
+  // Read additional stems options if separate stems is active.
+  if (inputSeparateStems.checked) {
+    const audioExtension = document.getElementById("audio-extension").value;
+    const threads = document.getElementById("threads").value;
+    // Append these to your args array or configuration object.
+    args.push(`--audio-extension=${audioExtension}`);
+    args.push(`--threads=${threads}`);
   }
 
   // Add UUID to identify each process
