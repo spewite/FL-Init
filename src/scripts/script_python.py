@@ -159,7 +159,7 @@ def separate_audio(assets_path, audio_path):
 
     # Run demucs with the output path set to stems_base.
     # This will generate a structure: stems_base/mdx_extra/audio_name/(the 4 files)
-    command = f'--mp3 --verbose -n mdx_extra --out "{stems_base}" "{audio_path}"'
+    command = f'--verbose -n mdx_extra --jobs 4 --out "{stems_base}" "{audio_path}"'
     args = shlex.split(command)
 
     output_message("Stem extraction in progress...")
