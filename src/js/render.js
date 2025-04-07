@@ -106,8 +106,7 @@ ipcRenderer.on('get-configuration', (event, JSON_Config) => {
 });
 
 function setupParameters(JSON_Config) {
-
-  const {project_path, separate_stems} = JSON_Config
+  const { project_path, separate_stems, threads, audio_extension } = JSON_Config;
   
   if (!project_path) {
     window.dialog.showModal();
@@ -125,6 +124,14 @@ function setupParameters(JSON_Config) {
   // Set the default value of separate stems and update the panel visibility
   inputSeparateStems.checked = separate_stems;
   updateStemOptionsVisibility();
+
+  // Set the threads and audio extension values automatically in the UI
+  if (threads) {
+    document.getElementById("threads").value = threads;
+  }
+  if (audio_extension) {
+    document.getElementById("audio-extension").value = audio_extension;
+  }
 }
 
 // ----- OPEN LINKS IN BROWSER ---- //
@@ -447,6 +454,16 @@ function saveConfiguration()
 function saveStemsValue() {
   const value = inputSeparateStems.checked;
   ipcRenderer.send('save-stems-value', value)
+}
+
+// Add change listeners for threads and audio extension inputs
+document.getElementById("threads").addEventListener("change", saveThreadExtensionValues);
+document.getElementById("audio-extension").addEventListener("change", saveThreadExtensionValues);
+
+function saveThreadExtensionValues() {
+  const threads = document.getElementById("threads").value;
+  const audio_extension = document.getElementById("audio-extension").value;
+  ipcRenderer.send("save-thread-ext-value", { threads, audio_extension });
 }
 
 /// ------- BACKEND MODAL CONFIGURATION ------  ///
