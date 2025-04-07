@@ -182,14 +182,21 @@ input[type="text"], select {
   border-radius: 5px;
   background-color: #282828;
   margin-left: 10px;
+  transition: all .3s;
+}
+
+select:focus,
+input:focus {
+  transition: all .3s;
+  box-shadow: 0 0 5px var(--primary);
+  outline: none;
 }
 
 select option:first-child {
   font-style: italic;
 }
 
-button
-{
+button {
   margin-left: 10px;
 }
 
@@ -201,9 +208,7 @@ button
   box-shadow: 0px 0px 15px var(--primary);
 }
 
-.input-group input:focus,
-select
-{
+select {
   outline: none;
   box-shadow: 0px 0px 10px #31313194;
   transition: .2s;
@@ -492,10 +497,47 @@ input:checked + .slider {
   background-color: var(--secondary-container);
 }
 
-input:focus + .slider {
+.slider {
   box-shadow: 0 0 1px var(--secondary-container);
 }
 
 input:checked + .slider:before {
   transform: translateX(1.9em);
+}
+
+/*  -----------------------------------  ///
+///          STEMS OPTIONS CONTAINER      /// 
+/// ----------------------------------   */
+
+#stems-options {
+  background: linear-gradient(135deg, #3a3a3a, #1c1c1c);
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  flex-direction: column;
+}
+
+#stems-options .input-group {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+#stems-options label {
+  margin-right: 10px;
+}
+
+#stems-options select,
+#stems-options input[type="number"] {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background: #282828;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
