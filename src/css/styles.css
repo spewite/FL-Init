@@ -551,5 +551,4 @@ input:checked + .slider:before {
 
 #advanced-toggle i {
   margin-left: 5px;
-  transition: all .3s;
 }
