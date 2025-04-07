@@ -447,7 +447,20 @@ ipcMain.on('get-configuration', async () => {
 
 async function getConfiguration() {
   const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
-  return JSON.parse(data);
+  let config = JSON.parse(data);
+  let updated = false;
+  if (!config.hasOwnProperty('threads')) {
+    config.threads = "4";  // Default threads value
+    updated = true;
+  }
+  if (!config.hasOwnProperty('audio_extension')) {
+    config.audio_extension = "wav";  // Default extension value
+    updated = true;
+  }
+  if (updated) {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+  }
+  return config;
 }
 
 /// -----------------------------------  ///
@@ -508,6 +521,16 @@ ipcMain.on('save-stems-value', (event, separateStems) => {
     }
   });
 })
+
+ipcMain.on('save-thread-ext-value', async (event, data) => {
+  try {
+    const currentConfig = await getConfiguration();
+    const newConfig = { ...currentConfig, threads: data.threads, audio_extension: data.audio_extension };
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(newConfig, null, 2));
+  } catch (error) {
+    throwError('Error saving thread/extension values:', error);
+  }
+});
 
 /// ------------------------------------  ///
 ///       OPEN FILE/DIRECTORY DIALOG      ///
