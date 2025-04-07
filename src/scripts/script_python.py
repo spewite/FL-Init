@@ -303,7 +303,7 @@ def main(args):
         output_message(f"Validation error: {str(ve)}", error=True)
 
     except Exception as e:
-        output_message(f"Error during download or processing of video: {str(e)}", error=True)
+        output_message(f"Error during download or processing of video: {str(e)}. \n It might be due to insufficient disk space. Please check your disk space and try again.", error=True)
 
     return 1
 
