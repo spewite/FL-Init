@@ -1,4 +1,4 @@
-- Check DPI Aware
-- Look if the venv can be copied into APPDATA in the installation process, and if not, create a loading screen.
-- Tempalte path value undefined
-- Create a pipeline to update depedencies into the python embed
+- Look what is necessary to copy to appdata. If not necessary take from project path
+- Production Arrow not displaying
+- Create a pipeline to update depedencies into the python embed-
+- Check how FFMPEG is used
