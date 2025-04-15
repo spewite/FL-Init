@@ -115,26 +115,35 @@ header {
   font-size: 12px;
 }
 
-.logo {
+.app-logo {
   width: 170px;
   filter: drop-shadow(0 0 0.75rem orange);
   user-select:none;
 }
 
-.twitter-logo {
+.logo {
   outline: none;
   position: absolute;
-  left: 40px;
   top: 30px;
   text-decoration: none;
   transition: all .3s;
   animation: logo-animation 1.5s infinite alternate;
+  font-size: 2.2rem;
+  color: var(--primary);
+  text-decoration: none;
 }
 
-.twitter-logo:hover {
-  /* animation: none; */
+.logo:hover {
   transform: scale(1.1);
   filter: drop-shadow(0 0 1rem orange);
+}
+
+.twitter-logo {
+  left: 40px;
+}
+
+.github-logo {
+  left: 100px;
 }
 
 @keyframes logo-animation {
