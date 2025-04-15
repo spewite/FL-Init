@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>FL Init</title>
   <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com;">
   <meta charset="UTF-8">
 </head>
 <body>
@@ -49,19 +49,24 @@
 
   <div class="container">
     <header>
-      <a href="https://x.com/iizetaa" target="_blank" class="twitter-logo">
-        <svg viewBox="0 0 300 300.251" width="24" height="24" fill="var(--primary)" xmlns="http://www.w3.org/2000/svg">
-          <path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59h89.34M36.01 19.54H76.66l187.13 262.13h-40.66"/>
-        </svg>
+   
+      <!-- GitHub Icon -->
+      <a href="https://github.com/spewite/FL-Init" target="_blank" class="logo github-logo">
+        <i class="fa-brands fa-github"></i>
       </a>
-      <span id="app-version"></span>
-      <img src="../../assets/logo.png" class="logo" draggable="false">
-    </header>
+      
+      <!-- Twitter Icon -->
+      <a href="https://x.com/iizetaa" target="_blank" class="logo twitter-logo">
+        <i class="fa-brands fa-x-twitter"></i>
+      </a>
 
+      <span id="app-version"></span>
+      <img src="../../icons/icon.png" class="app-logo" draggable="false">
+    </header>
     <form id="form">
       <div class="input-group" id="youtube-input-group">
         <label for="youtube-url">Youtube URL:</label>
-        <input type="text" id="youtube-url" value="" placeholder="Enter the URL of the song">
+        <input type="text" id="youtube-url" value="https://www.youtube.com/watch?v=CZ5Ue_Fv1e0&list=RDCZ5Ue_Fv1e0&start_radio=1" placeholder="Enter the URL of the song">
       </div>
       
       <div class="input-group" id="directory-input-group">
