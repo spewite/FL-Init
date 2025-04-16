@@ -8,7 +8,7 @@ const fs = require('fs');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 const { spawn, spawnSync } = require('child_process');
-const { OUTPUT_STATES } = require('../js/constants');
+const { OUTPUT_STATES } = require('../constants');
 
 let win;
 let tray = null;
