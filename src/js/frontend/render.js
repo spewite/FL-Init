@@ -1,7 +1,8 @@
 const { ipcRenderer, shell } = require('electron');
 const Swal = require('sweetalert2');
+const path = require('path');
 
-const { OUTPUT_STATES } = require('../js/constants');
+const { OUTPUT_STATES } = require(path.join(__dirname, '../js/constants.js'));
 const changeEvent = new Event('change'); // Manually trigger the change event
 
 // Dark theme configuration for SweetAlert2

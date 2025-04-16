@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   // Punto de entrada para tu aplicación
-  entry: './src/js/render.js',  // Asegúrate de que este sea el camino correcto al archivo principal de tu renderer
+  entry: './src/js/frontend/render.js',  // Asegúrate de que este sea el camino correcto al archivo principal de tu renderer
 
   // Configuración de salida
   output: {
