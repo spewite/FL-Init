@@ -57,53 +57,12 @@ app.on('before-quit', () => {
 /// -------------------------------------  ///
 
 // Paths for FFmpeg
-const FFmpegPath = path.join(app.getPath('userData'), 'ffmpeg');
+const FFmpegPath = path.join(app.getAppPath(), 'src', 'ffmpeg');
 const FFmpegBinary = path.join(FFmpegPath, 'ffmpeg.exe');
 
 // Function to check if FFmpeg is installed
 function checkFFmpeg() {
-  if (!fs.existsSync(FFmpegBinary)) {
-    console.log('FFmpeg is not installed, proceeding with the installation...');
-    installFFmpeg();
-  } else {
-    console.log('FFmpeg is installed.');
-  }
-}
-
-// Function to copy FFmpeg from the package to the user data directory
-function installFFmpeg() {
-  const ffmpegSource = path.join(app.getAppPath(), 'src', 'ffmpeg');
-
-  // Log the paths for debugging
-  console.log('ffmpegSource:', ffmpegSource);
-  console.log('FFmpegPath:', FFmpegPath);
-
-  try {
-    // Check if the source folder exists
-    if (!fs.existsSync(ffmpegSource)) {
-      throw new Error(`The FFmpeg source directory does not exist: ${ffmpegSource}`);
-    }
-    
-    fs.mkdirSync(FFmpegPath, { recursive: true });
-
-    // Check if the files exist before copying
-    const files = ['ffmpeg.exe', 'ffplay.exe', 'ffprobe.exe'];
-    for (const file of files) {
-      const sourcePath = path.join(ffmpegSource, file);
-      if (!fs.existsSync(sourcePath)) {
-        throw new Error(`The FFmpeg file ${file} does not exist in the source: ${sourcePath}`);
-      }
-    }
-
-    fs.copyFileSync(path.join(ffmpegSource, 'ffmpeg.exe'), FFmpegBinary);
-    fs.copyFileSync(path.join(ffmpegSource, 'ffplay.exe'), path.join(FFmpegPath, 'ffplay.exe'));
-    fs.copyFileSync(path.join(ffmpegSource, 'ffprobe.exe'), path.join(FFmpegPath, 'ffprobe.exe'));
-
-    console.log('FFmpeg installed correctly.');
-  } catch (error) {
-    console.error('Error installing FFmpeg:', error);
-    throwError('Error installing FFmpeg:', error);
-  }
+  console.log('Using FFmpeg from installation path.');
 }
 
 /// ------------------------------  ///
@@ -125,64 +84,50 @@ function checkEmbed() {
   }
 }
 
+/// -------------------  ///
+///       BUILD PATHS     /// 
+/// -------------------  ///
+
+const APPDATA_PATH = app.getPath('userData');
+const DEVELOPMENT_PATH = app.getAppPath();
+const PRODUCTION_PATH = process.resourcesPath;
+
+console.log(PRODUCTION_PATH)
+
+const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
+  ? path.join(DEVELOPMENT_PATH, 'src', 'scripts', 'script_python.py') // Dev path
+  : path.join(PRODUCTION_PATH, 'src', 'scripts', 'script_python.py'); // Production path
+
+
+console.log(PYTHON_SCRIPT_PATH)
+  
+
 /// ------------------------------  ///
 ///       SAVE FILES IN APPDATA     /// 
 /// ------------------------------  ///
 
-/// -----------  DIRECTORIOS -----------  ///
-
-// APPDATA
-const ASSETS_PATH = path.join(app.getPath('userData'), 'assets');
-const SCRIPTS_PATH = path.join(app.getPath('userData'), 'scripts');
-const ICONS_PATH = path.join(app.getPath('userData'), 'icons');
-
-// ASAR
-const ASAR_PATH = app.getAppPath();
-
-try {
-  if (!fs.existsSync(ASSETS_PATH)) {
-    fs.mkdirSync(ASSETS_PATH);
-  }
-  if (!fs.existsSync(SCRIPTS_PATH)) {
-    fs.mkdirSync(SCRIPTS_PATH);
-  }
-  if (!fs.existsSync(ICONS_PATH)) {
-    fs.mkdirSync(ICONS_PATH);
-  }
-} catch (error) {
-  console.error('Error creating directories: ', error);
-  throwError(error);
-}
-
 /// -----------  ARCHIVOS -----------  ///
 
-const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
-
-const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'src', 'scripts', 'script_python.py') // Dev path
-  : path.join(SCRIPTS_PATH, 'script_python.py'); // Production path
+const CONFIG_PATH = path.join(APPDATA_PATH, 'config.json');
 
 const PNG_ICON_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'icons', 'icon.png') // Dev path
-  : path.join(ICONS_PATH, 'icon.png'); // Production path
+  ? path.join(DEVELOPMENT_PATH, 'icons', 'icon.png') // Dev path
+  : path.join(PRODUCTION_PATH, 'icons', 'icon.png'); // Production path
 
 const EMPTY_FLP_PATH = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'src', 'templates', 'empty-template.flp') // Dev path
-  : path.join(SCRIPTS_PATH, 'empty-template.flp'); // Production path
+  ? path.join(DEVELOPMENT_PATH, 'src', 'templates', 'empty-template.flp') // Dev path
+  : path.join(PRODUCTION_PATH, 'src', 'templates', 'empty-template.flp'); // Production path
 
 try {
   if (!fs.existsSync(CONFIG_PATH)) {
-    fs.copyFileSync(path.join(ASAR_PATH, 'config.json'), CONFIG_PATH);
-  }
-  if (!fs.existsSync(PYTHON_SCRIPT_PATH)) {
-    fs.copyFileSync(path.join(ASAR_PATH, 'src', 'scripts', 'script_python.py'), PYTHON_SCRIPT_PATH);
+    fs.copyFileSync(path.join(PRODUCTION_PATH, 'config.json'), CONFIG_PATH);
   }
   if (!fs.existsSync(PNG_ICON_PATH)) {
-    fs.copyFileSync(path.join(ASAR_PATH, 'icons', 'icon.png'), PNG_ICON_PATH);
+    fs.copyFileSync(path.join(PRODUCTION_PATH, 'icons', 'icon.png'), PNG_ICON_PATH);
   }
   if (!fs.existsSync(EMPTY_FLP_PATH)) {
     fs.copyFileSync(
-      path.join(ASAR_PATH, 'src', 'templates', 'empty-template.flp'),
+      path.join(PRODUCTION_PATH, 'src', 'templates', 'empty-template.flp'),
       EMPTY_FLP_PATH
     );
   }
