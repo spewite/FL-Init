@@ -81,13 +81,6 @@
     ],
     "extraResources": [
       {
-        "from": "src/ffmpeg/",
-        "to": "ffmpeg",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
         "from": "python-embed/",
         "to": "python-embed",
         "filter": [
