@@ -77,7 +77,7 @@ function checkEmbed() {
 
 const APPDATA_PATH = app.getPath('userData');
 const DEVELOPMENT_PATH = app.getAppPath();
-const PRODUCTION_PATH = process.resourcesPath + "\app.asar.unpacked";
+const PRODUCTION_PATH = path.join(process.resourcesPath, "app.asar.unpacked");
 
 console.log("Production Path: " + PRODUCTION_PATH)
 
