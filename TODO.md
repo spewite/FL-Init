@@ -1,3 +1,1 @@
-- Look what is necessary to copy to appdata. If not necessary take from project path
-- Production Arrow not displaying
-- Create a pipeline to update depedencies into the python embed-
+- Create a pipeline to update depedencies into the python embed
