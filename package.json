@@ -1,102 +1,103 @@
-{
-  "name": "flinit",
-  "version": "1.0.24",
-  "description": "FL INIT is an application designed to simplify the creation of projects in FL Studio using songs from YouTube. This application automates audio downloading and facilitates the initial setup of projects in FL Studio. Users can select a specific .flp template for each project and optionally extract the stems of the songs.",
-  "main": "src/js/backend/main.js",
-  "scripts": {
-    "build": "cross-env NODE_ENV=production webpack --mode production",
-    "start": "cross-env NODE_ENV=development electron .",
-    "pack": "cross-env NODE_ENV=production electron-builder --dir",
-    "dist": "cross-env NODE_ENV=production electron-builder --publish=never",
-    "publish": "cross-env NODE_ENV=production node load-env.js"
-  },
-  "keywords": [],
-  "author": "izeta",
-  "license": "ISC",
-  "dependencies": {
-    "@sweetalert2/theme-dark": "^5.0.16",
-    "dotenv": "^16.4.5",
-    "electron-is-dev": "^3.0.1",
-    "electron-log": "^5.1.5",
-    "electron-updater": "^6.2.1",
-    "shell-quote": "^1.8.1",
-    "sweetalert2": "^11.10.8"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.24.5",
-    "@babel/preset-env": "^7.24.5",
-    "babel-loader": "^9.1.3",
-    "cross-env": "^7.0.3",
-    "css-loader": "^7.1.1",
-    "electron": "^30.0.2",
-    "electron-builder": "^24.13.3",
-    "style-loader": "^4.0.0",
-    "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
-  },
-  "build": {
-    "asarUnpack": [
-      "**/config.json",
-      "**/scripts/script_python.py",
-      "**/icons/icon.ico",
-      "**/icons/icon.png"
-    ],
-    "productName": "FL-Init",
-    "appId": "com.flinit.app",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "spewite",
-        "repo": "FL-Init",
-        "releaseType": "release"
+  {
+    "name": "flinit",
+    "version": "1.0.25",
+    "description": "FL INIT is an application designed to simplify the creation of projects in FL Studio using songs from YouTube. This application automates audio downloading and facilitates the initial setup of projects in FL Studio. Users can select a specific .flp template for each project and optionally extract the stems of the songs.",
+    "main": "src/js/backend/main.js",
+    "scripts": {
+      "build": "cross-env NODE_ENV=production webpack --mode production",
+      "start": "cross-env NODE_ENV=development electron .",
+      "pack": "cross-env NODE_ENV=production electron-builder --dir",
+      "dist": "cross-env NODE_ENV=production electron-builder --publish=never",
+      "publish": "cross-env NODE_ENV=production node load-env.js"
+    },
+    "keywords": [],
+    "author": "izeta",
+    "license": "ISC",
+    "dependencies": {
+      "@sweetalert2/theme-dark": "^5.0.16",
+      "dotenv": "^16.4.5",
+      "electron-is-dev": "^3.0.1",
+      "electron-log": "^5.1.5",
+      "electron-updater": "^6.2.1",
+      "shell-quote": "^1.8.1",
+      "sweetalert2": "^11.10.8"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.24.5",
+      "@babel/preset-env": "^7.24.5",
+      "babel-loader": "^9.1.3",
+      "cross-env": "^7.0.3",
+      "css-loader": "^7.1.1",
+      "electron": "^30.0.2",
+      "electron-builder": "^24.13.3",
+      "style-loader": "^4.0.0",
+      "webpack": "^5.91.0",
+      "webpack-cli": "^5.1.4"
+    },
+    "build": {
+      "asarUnpack": [
+        "**/config.json",
+        "**/scripts/script_python.py",
+        "**/icons/icon.ico",
+        "**/icons/icon.png",
+        "**/templates/**"
+      ],
+      "productName": "FL-Init",
+      "appId": "com.flinit.app",
+      "publish": [
+        {
+          "provider": "github",
+          "owner": "spewite",
+          "repo": "FL-Init",
+          "releaseType": "release"
+        }
+      ],
+      "win": {
+        "target": "nsis",
+        "artifactName": "${productName}-Setup-${version}.${ext}",
+        "icon": "icons/icon.ico"
+      },
+      "mac": {
+        "target": "dmg",
+        "artifactName": "${productName}-${version}-mac.${ext}",
+        "icon": "icons/icon.png"
+      },
+      "linux": {
+        "target": "AppImage",
+        "artifactName": "${productName}-${version}-linux.${ext}",
+        "icon": "icons/icon.png"
+      },
+      "directories": {
+        "output": "dist"
+      },
+      "files": [
+        "assets/",
+        "src/",
+        "icons/",
+        "scripts/",
+        "templates/",
+        "config.json",
+        "package.json",
+        "webpack.config.js",
+        "requirements.txt"
+      ],
+      "extraResources": [
+        {
+          "from": "python-embed/",
+          "to": "python-embed",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ],
+      "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true,
+        "perMachine": true,
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true,
+        "shortcutName": "FL-Init",
+        "include": "build/installer.nsh"
       }
-    ],
-    "win": {
-      "target": "nsis",
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "icon": "icons/icon.ico"
-    },
-    "mac": {
-      "target": "dmg",
-      "artifactName": "${productName}-${version}-mac.${ext}",
-      "icon": "icons/icon.png"
-    },
-    "linux": {
-      "target": "AppImage",
-      "artifactName": "${productName}-${version}-linux.${ext}",
-      "icon": "icons/icon.png"
-    },
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "assets/",
-      "src/",
-      "icons/",
-      "scripts/",
-      "templates/",
-      "config.json",
-      "package.json",
-      "webpack.config.js",
-      "requirements.txt"
-    ],
-    "extraResources": [
-      {
-        "from": "python-embed/",
-        "to": "python-embed",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "perMachine": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "FL-Init",
-      "include": "build/installer.nsh"
     }
   }
-}
