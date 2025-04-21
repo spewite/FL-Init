@@ -194,8 +194,8 @@ function createWindow() {
   // Maximize window after creating
   win.maximize();
 
-  // // Open DevTools automatically
-  win.webContents.openDevTools();
+  // Open DevTools automatically
+  // win.webContents.openDevTools();
 
   // Modify window close event
   win.on('close', (event) => {
