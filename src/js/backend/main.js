@@ -52,19 +52,6 @@ app.on('before-quit', () => {
   }
 });
 
-/// -------------------------------------  ///
-///      INSTALL FFMPEG IF NOT INSTALLED   /// 
-/// -------------------------------------  ///
-
-// Paths for FFmpeg
-const FFmpegPath = path.join(app.getAppPath(), 'src', 'ffmpeg');
-const FFmpegBinary = path.join(FFmpegPath, 'ffmpeg.exe');
-
-// Function to check if FFmpeg is installed
-function checkFFmpeg() {
-  console.log('Using FFmpeg from installation path.');
-}
-
 /// ------------------------------  ///
 ///          PYTHON EMBED           /// 
 /// ------------------------------  ///
@@ -270,7 +257,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  checkFFmpeg();
 
   app.on('activate', () => {
     if (win) {
