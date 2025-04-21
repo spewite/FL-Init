@@ -77,17 +77,14 @@ function checkEmbed() {
 
 const APPDATA_PATH = app.getPath('userData');
 const DEVELOPMENT_PATH = app.getAppPath();
-const PRODUCTION_PATH = process.resourcesPath;
+const PRODUCTION_PATH = process.resourcesPath + "\app.asar.unpacked";
 
-console.log(PRODUCTION_PATH)
+console.log("Production Path: " + PRODUCTION_PATH)
 
 const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
   ? path.join(DEVELOPMENT_PATH, 'src', 'scripts', 'script_python.py') // Dev path
   : path.join(PRODUCTION_PATH, 'src', 'scripts', 'script_python.py'); // Production path
 
-
-console.log(PYTHON_SCRIPT_PATH)
-  
 
 /// ------------------------------  ///
 ///       SAVE FILES IN APPDATA     /// 
