@@ -165,8 +165,8 @@ form {
 
 .container {
   position: relative;
-  max-width: 960px;
-  width: 960px;
+  max-width: 1200px;
+  width: 1200px;
   box-shadow: 0px 0px 30px #00000070;
   background: #252525;
   margin: auto;
