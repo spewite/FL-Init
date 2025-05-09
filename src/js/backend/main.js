@@ -9,6 +9,7 @@ const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 const { spawn, spawnSync } = require('child_process');
 const { OUTPUT_STATES } = require('../constants');
+const os = require('os');
 
 let win;
 let tray = null;
@@ -377,12 +378,14 @@ async function getConfiguration() {
   const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
   let config = JSON.parse(data);
   let updated = false;
+  const numberOfCpus = os.cpus().length.toString();
+
   if (!config.hasOwnProperty('threads')) {
-    config.threads = "4";  // Default threads value
+    config.threads = numberOfCpus || "4";  // Default threads value
     updated = true;
   }
   if (!config.hasOwnProperty('audio_extension')) {
-    config.audio_extension = "wav";  // Default extension value
+    config.audio_extension = "mp3";  // Default extension value
     updated = true;
   }
   if (updated) {
@@ -519,6 +522,7 @@ ipcMain.on('run-python-script', (event, input) => {
   // 1: Youtube URL
   // 2: Project Name
   // Optional arguments: --separate-stems, --template-path=<templatePath>
+  // If separate stems is checked: --audio-extension=<mp3/wav>, --threads=int
   const {args, UUID} = input;
 
   if (!hasTemplatePath(args)) {
