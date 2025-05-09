@@ -577,12 +577,11 @@ function loadTemplates(){
 }
 
 ipcRenderer.on('get-templates-list', (event, json_arrays) => {
-  
   const { filesPaths } = json_arrays;
-
   filesPaths.forEach( filePath => {
     insertOption(filePath);
   })
+  inputTemplatePath.selectedIndex = 0; // No template selected by default
 });
 
 
