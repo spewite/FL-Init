@@ -53,25 +53,6 @@ app.on('before-quit', () => {
   }
 });
 
-/// ------------------------------  ///
-///          PYTHON EMBED           /// 
-/// ------------------------------  ///
-
-const pythonEmbedPath = process.env.NODE_ENV === 'development'
-  ? path.join(app.getAppPath(), 'python-embed', 'python.exe')  // Development: local embed folder
-  : path.join(process.resourcesPath, 'python-embed', 'python.exe'); // Production: bundled with your app
-
-// Simplified function to verify bundled Python exists.
-function checkEmbed() {
-  clientLog("embed path: " + pythonEmbedPath);
-  if (!fs.existsSync(pythonEmbedPath)) {
-    console.error('Embedded Python not found at:', pythonEmbedPath);
-    throwError('Embedded Python was not found. Please ensure the python-embed folder is packaged with the app.');
-  } else {
-    console.log("Embedded Python found at installation path.");
-  }
-}
-
 /// -------------------  ///
 ///       BUILD PATHS     /// 
 /// -------------------  ///
@@ -86,6 +67,9 @@ const PYTHON_SCRIPT_PATH = process.env.NODE_ENV === 'development'
   ? path.join(DEVELOPMENT_PATH, 'src', 'scripts', 'script_python.py') // Dev path
   : path.join(PRODUCTION_PATH, 'src', 'scripts', 'script_python.py'); // Production path
 
+const pythonVenvPath = process.env.NODE_ENV === 'development'
+  ? path.join(DEVELOPMENT_PATH, 'venv', 'Scripts', 'python.exe') // Dev venv
+  : path.join(PRODUCTION_PATH, 'venv', 'Scripts', 'python.exe'); // Prod venv
 
 /// ------------------------------  ///
 ///       SAVE FILES IN APPDATA     /// 
@@ -249,7 +233,7 @@ function createWindow() {
 
   win.webContents.on('did-finish-load', () => {
     console.log('Page fully loaded');
-    checkEmbed();
+    checkPythonInstalled();
   });
 }
 
@@ -529,7 +513,7 @@ ipcMain.on('run-python-script', (event, input) => {
     args.push('--template-path=' + EMPTY_FLP_PATH);
   }
 
-  pythonProcess = spawn(pythonEmbedPath, [PYTHON_SCRIPT_PATH, ...args]);
+  pythonProcess = spawn(pythonVenvPath, [PYTHON_SCRIPT_PATH, ...args]);
 
   // Secure function to send messages
   const safeSend = (message) => {
@@ -618,6 +602,49 @@ ipcMain.on('run-python-script', (event, input) => {
 /// -----------------------------------  ///
 ///               UTILITIES              ///
 /// -----------------------------------  ///
+
+// Checks if the venv Python executable exists and is runnable
+function checkPythonInstalled() {
+
+  if (!fs.existsSync(pythonVenvPath)) {
+    console.error('Python venv not found at:', pythonVenvPath);
+    throwError('Please, install python 3.8-3.11');
+    return false;
+  }
+
+  try {
+    const result = spawnSync(pythonVenvPath, ['--version'], { encoding: 'utf8' });
+    if (result.error || result.status !== 0) {
+      console.error('Python not runnable:', result.error || result.stderr);
+      throwError('Please, install python 3.8-3.11');
+      return false;
+    }
+    const versionOutput = (result.stdout || result.stderr).trim();
+    const match = versionOutput.match(/Python\s+(\d+)\.(\d+)\.(\d+)/);
+    if (!match) {
+      console.error('Could not parse Python version:', versionOutput);
+      throwError('Please, install python 3.8-3.11');
+      return false;
+    }
+    const major = parseInt(match[1], 10);
+    const minor = parseInt(match[2], 10);
+    if (
+      major !== 3 ||
+      minor < 8 ||
+      minor > 11
+    ) {
+      console.error('Python version not supported:', versionOutput);
+      throwError('Please, install python 3.8-3.11');
+      return false;
+    }
+    console.log('Python found:', versionOutput);
+    return true;
+  } catch (err) {
+    console.error('Exception checking Python:', err);
+    throwError('Please, install python 3.8-3.11');
+    return false;
+  }
+}
 
 function clientLog(...args) {
   if (win && !win.isDestroyed()) {
