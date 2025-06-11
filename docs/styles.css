@@ -129,26 +129,29 @@ header {
   justify-content: center;
 }
 
-.image-container {
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
+
+/* Contenedor de perspectiva */
+.perspective-container {
+  perspective: 1000px;       /* distancia al “ojo” */
+  display: inline-block;     /* para ajustar al tamaño de la imagen */
 }
 
-.glow-effect {
-  position: relative;
+/* Imagen en 3D */
+.perspective-img {
+  display: block;
+  transform-style: preserve-3d;
+  transform: rotateX(10deg) rotateY(-15deg) scale(1.02);
+  transition: transform 0.4s ease;
+  box-shadow: 0 20px 40px #d9b06332;
 }
 
-.glow-effect::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+/* Hover opcional */
+.perspective-container:hover .perspective-img {
+  transform: rotateX(0deg) rotateY(0deg) scale(1.05);
+} 
+
+img {
   border-radius: 8px;
-  box-shadow: 0 0 40px 5px rgba(217, 176, 99, 0.3);
-  z-index: -1;
 }
 
 /* Buttons */

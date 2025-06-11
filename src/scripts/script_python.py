@@ -88,9 +88,8 @@ def detect_key(audio_path):
     
     return f"{best_key} {best_mode} (Score: {round(best_score, 2)})"
 
-
 # Function to download audio only and convert it to MP3
-def download_video():
+def download_audio():
     
     try:
         output_message("Starting audio download...")
@@ -126,28 +125,8 @@ def download_video():
 
         # Remove .mp4
         os.remove(audio_file_path)
-        
-        # Get key and bpm of the song
-        key = detect_key(audio_out_path)
-        bpm = get_song_bpm(audio_out_path)
 
-        # Create file with original song info
-        create_info_file(key, bpm)
-
-        # Crear the FLP template
-        create_flp(key, bpm)
-
-        # Open the project folder
-        open_folder(project_path)
-
-        # Verify if the stems separation checkbox is checked
-        if separate_stems: 
-            output_message("The project has been created. The stem extraction process has just begun. ")
-            output_message("To see the progress, check the terminal. If you want, you can create another project in the meantime (it will slow down the previous one).")
-            output_message(f"Using device '{device_to_use.upper()}' for the separation process.")
-            separate_audio(assets_path, audio_out_path)
-        else: 
-            output_message("The project has been created. You can create another one if you wish.")
+        return {"audio_path": audio_out_path, "assets_path": assets_path}
 
     except Exception as e:
         output_message(f"Error downloading audio: {str(e)}", error=True)
@@ -235,7 +214,6 @@ def validate_project_name(name):
     if name.endswith('.') or name.endswith(' '):
         raise ValueError("Invalid project name. The project name cannot end with a period or a space.")
 
-
 # Create the FLP project
 def create_flp(key, bpm):
     if template_path:
@@ -246,7 +224,6 @@ def create_flp(key, bpm):
             output_message(f"Using valid template from {template_path} to create the project")
         else:
             raise ValueError(f"The provided template is not a valid .flp file: {template_path}")
-
 
 def get_song_bpm(file_path):
     # Load the audio file
@@ -307,17 +284,35 @@ def main(args):
     device_to_use = check_gpu_availability()
 
     try:
-        # Check if the URL is from YouTube. 
-        # I have it commented out on purpose. If the video is not valid, the script will throw an error anyway.
-        # if not is_video_valid():
-        #     raise ValueError("The URL must be from YouTube")
-
         # Check if the destination directory already exists (It must not exist)
         if os.path.exists(project_path):
             raise FileExistsError(f"The destination directory '{project_path}' already exists. Please choose a different project name or change the project location.")
         
-    # -- Start the download process -- #
-        download_video()
+        # Download audio and put in /assets folder
+        audio_path, assets_path = download_audio().values()
+        
+        # Get key and BPM of the song
+        key = detect_key(audio_path)
+        bpm = get_song_bpm(audio_path)
+
+        # Create file with original song info
+        create_info_file(key, bpm)
+
+        # Create the FLP template
+        create_flp(key, bpm)
+
+        # Open the project folder
+        open_folder(project_path)
+
+        # Verify if the stems separation checkbox is checked
+        if separate_stems: 
+            output_message("The project has been created. The stem extraction process has just begun. ")
+            output_message("To see the progress, check the terminal. If you want, you can create another project in the meantime (it will slow down the previous one).")
+            output_message(f"Using device '{device_to_use.upper()}' for the separation process.")
+            separate_audio(assets_path, audio_path)
+        else: 
+            output_message("The project has been created. You can create another one if you wish.")
+
     except ValueError as ve:
         output_message(f"Validation error: {str(ve)}", error=True)
 
