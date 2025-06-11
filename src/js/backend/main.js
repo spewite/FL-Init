@@ -608,7 +608,7 @@ function checkPythonInstalled() {
 
   if (!fs.existsSync(pythonVenvPath)) {
     console.error('Python venv not found at:', pythonVenvPath);
-    throwError('Please, install python 3.8-3.11');
+    throwError('Python venv not found, there is an installation error. Please, try to reinstall the app and if the errors persists, contact the developer.');
     return false;
   }
 
