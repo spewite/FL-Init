@@ -608,22 +608,22 @@ function checkPythonInstalled() {
 
   if (!fs.existsSync(pythonVenvPath)) {
     console.error('Python venv not found at:', pythonVenvPath);
-    throwError('Python venv not found, there is an installation error. Please, try to reinstall the app and if the errors persists, contact the developer.');
+    throwError(`The Python virtual environment is not found in path ${pythonVenvPath}. There is an installation error. Please, try to reinstall the app and if the errors persists, contact the developer.`);
     return false;
   }
 
   try {
     const result = spawnSync(pythonVenvPath, ['--version'], { encoding: 'utf8' });
     if (result.error || result.status !== 0) {
-      console.error('Python not runnable:', result.error || result.stderr);
-      throwError('Please, install python 3.8-3.11');
+      clientLog('Python not runnable:', result.error);
+      throwError('Python is not runnable. Please, install python 3.8-3.11');
       return false;
     }
     const versionOutput = (result.stdout || result.stderr).trim();
     const match = versionOutput.match(/Python\s+(\d+)\.(\d+)\.(\d+)/);
     if (!match) {
-      console.error('Could not parse Python version:', versionOutput);
-      throwError('Please, install python 3.8-3.11');
+      clientLog('Could not parse Python version:', versionOutput);
+      throwError('Could not parse Python version. Please, install python 3.8-3.11');
       return false;
     }
     const major = parseInt(match[1], 10);
@@ -633,15 +633,15 @@ function checkPythonInstalled() {
       minor < 8 ||
       minor > 11
     ) {
-      console.error('Python version not supported:', versionOutput);
-      throwError('Please, install python 3.8-3.11');
+      clientLog('Python version not supported:', versionOutput);
+      throwError(`Python version not supported: ${versionOutput}. Please, install python 3.8-3.11`);
       return false;
     }
-    console.log('Python found:', versionOutput);
+    clientLog('Python found:', versionOutput);
     return true;
   } catch (err) {
-    console.error('Exception checking Python:', err);
-    throwError('Please, install python 3.8-3.11');
+    clientLog('Exception checking Python:', err);
+    throwError('An unknown error occurred while checking for Python');
     return false;
   }
 }
